@@ -16,6 +16,18 @@ RPC_ORGS=("afrinic" "apnic" "arin" "ripencc" "lacnic" "rono")
 
 echo "Deploying ${#RPC_ORGS[@]} private RPC nodes..."
 
+# Resolve bootnode enode URLs using ClusterIP addresses (Besu requires IP, not DNS)
+BOOTNODE_ENODES=""
+for bi in $(seq 1 "${PRIVATE_BOOTNODE_COUNT:-2}"); do
+  BN_IP=$(kubectl get svc "bootnode-${bi}" -n "${NAMESPACE}" -o jsonpath='{.spec.clusterIP}')
+  BN_PUBKEY=$(kubectl get secret "bootnode-${bi}-key" -n "${NAMESPACE}" -o jsonpath='{.data.key\.pub}' | base64 -d | sed 's/^0x//')
+  if [ -n "${BOOTNODE_ENODES}" ]; then
+    BOOTNODE_ENODES="${BOOTNODE_ENODES},"
+  fi
+  BOOTNODE_ENODES="${BOOTNODE_ENODES}enode://${BN_PUBKEY}@${BN_IP}:30303"
+done
+echo "  Resolved bootnode enodes: ${BOOTNODE_ENODES}"
+
 for ORG in "${RPC_ORGS[@]}"; do
   NAME="rpc-${ORG}"
   SA_NAME="${NAME}-sa"
@@ -50,6 +62,8 @@ spec:
         runAsNonRoot: true
         runAsUser: 1000
         fsGroup: 1000
+        seccompProfile:
+          type: RuntimeDefault
       containers:
         - name: besu
           image: ${BESU_IMAGE}
@@ -64,17 +78,10 @@ spec:
             - --rpc-http-host=0.0.0.0
             - --rpc-http-port=8545
             - --rpc-http-api=ETH,NET,QBFT,WEB3
-            - --rpc-http-cors-origins=none
-            - --host-allowlist=*.besu-private.svc.cluster.local,${NAME}
-            - --permissions-nodes-contract-enabled=true
-            - --permissions-nodes-contract-address=${NODE_INGRESS_ADDRESS}
-            - --permissions-accounts-contract-enabled=true
-            - --permissions-accounts-contract-address=${ACCOUNT_INGRESS_ADDRESS}
-            - --static-nodes-file=/config/static-nodes.json
+            - --rpc-http-cors-origins=*
+            - --host-allowlist=*
+            - --bootnodes=${BOOTNODE_ENODES}
             - --nat-method=NONE
-            - --tls-keystore-file=/tls/keystore.pfx
-            - --tls-keystore-password-file=/tls/keystore-password
-            - --tls-known-clients-file=/tls/known-clients.txt
             - --metrics-enabled=true
             - --metrics-port=9545
             - --metrics-host=0.0.0.0
@@ -84,6 +91,8 @@ spec:
               drop:
                 - ALL
             readOnlyRootFilesystem: false
+            seccompProfile:
+              type: RuntimeDefault
           resources:
             requests:
               cpu: "${RPC_CPU_REQUEST}"
@@ -127,6 +136,12 @@ spec:
             - name: tls
               mountPath: /tls
               readOnly: true
+            - name: tls-password
+              mountPath: /tls-password
+              readOnly: true
+            - name: known-clients
+              mountPath: /known-clients
+              readOnly: true
       volumes:
         - name: data
           emptyDir: {}
@@ -139,6 +154,12 @@ spec:
         - name: tls
           secret:
             secretName: ${NAME}-tls
+        - name: tls-password
+          secret:
+            secretName: besu-keystore-password
+        - name: known-clients
+          configMap:
+            name: besu-private-known-clients
 ---
 apiVersion: v1
 kind: Service

@@ -23,9 +23,9 @@ PASS=0
 FAIL=0
 WARN=0
 
-pass() { echo -e "  ${GREEN}✅ $1${NC}"; ((PASS++)); }
-fail() { echo -e "  ${RED}❌ $1${NC}"; ((FAIL++)); }
-warn() { echo -e "  ${YELLOW}⚠️  $1${NC}"; ((WARN++)); }
+pass() { echo -e "  ${GREEN}✅ $1${NC}"; ((PASS++)) || true; }
+fail() { echo -e "  ${RED}❌ $1${NC}"; ((FAIL++)) || true; }
+warn() { echo -e "  ${YELLOW}⚠️  $1${NC}"; ((WARN++)) || true; }
 
 echo ""
 echo "╔══════════════════════════════════════════════╗"
@@ -219,7 +219,7 @@ for DIR in "${REQUIRED_DIRS[@]}"; do
     pass "$DIR"
   else
     fail "Missing: $DIR"
-    ((MISSING_DIRS++))
+    ((MISSING_DIRS++)) || true
   fi
 done
 

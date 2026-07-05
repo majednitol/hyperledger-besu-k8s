@@ -34,6 +34,8 @@ spec:
     runAsNonRoot: true
     runAsUser: 1000
     fsGroup: 1000
+    seccompProfile:
+      type: RuntimeDefault
   containers:
     - name: extractor
       image: alpine
@@ -45,6 +47,8 @@ spec:
             - ALL
         runAsNonRoot: true
         runAsUser: 1000
+        seccompProfile:
+          type: RuntimeDefault
       volumeMounts:
         - name: out
           mountPath: /out
@@ -61,14 +65,21 @@ kubectl wait --for=condition=Ready pod/public-genesis-extractor -n "${NAMESPACE}
 echo "3. Copying generated configuration locally..."
 rm -rf "${TEMP_DIR}"
 mkdir -p "${TEMP_DIR}"
-kubectl cp -n "${NAMESPACE}" public-genesis-extractor:/out/ "${TEMP_DIR}/"
+kubectl cp -n "${NAMESPACE}" public-genesis-extractor:/out "${TEMP_DIR}"
 
 echo "4. Tearing down helper pod..."
 kubectl delete pod public-genesis-extractor -n "${NAMESPACE}" --wait=false
 
-# Check we have the expected directories
-VAL_DIR="${TEMP_DIR}/validators/networkFiles/keys"
-NON_VAL_DIR="${TEMP_DIR}/non-validators/networkFiles/keys"
+# Check we have the expected directories (fallback for different Besu versions)
+if [ -d "${TEMP_DIR}/validators/networkFiles/keys" ]; then
+  VAL_DIR="${TEMP_DIR}/validators/networkFiles/keys"
+  NON_VAL_DIR="${TEMP_DIR}/non-validators/networkFiles/keys"
+  GENESIS_PATH="${TEMP_DIR}/validators/networkFiles/genesis.json"
+else
+  VAL_DIR="${TEMP_DIR}/validators/keys"
+  NON_VAL_DIR="${TEMP_DIR}/non-validators/keys"
+  GENESIS_PATH="${TEMP_DIR}/validators/genesis.json"
+fi
 
 if [ ! -d "${VAL_DIR}" ] || [ ! -d "${NON_VAL_DIR}" ]; then
   echo "ERROR: Generated directories not found. Check Job logs."
@@ -100,7 +111,7 @@ mkdir -p "${SECRETS_OUT}"
 
 # 6. Process validator keys (public-validator-1 to public-validator-5)
 echo "6. Creating Secrets for validators..."
-declare -A NODE_ENODES
+STATIC_ENODES=()
 
 for i in $(seq 1 5); do
   KEY_INDEX=$((i - 1))
@@ -112,7 +123,7 @@ for i in $(seq 1 5); do
   
   # Format enode URL for static nodes
   ENODE="enode://${PUB_KEY}@${NAME}-0.${NAME}.${NAMESPACE}.svc.cluster.local:30303"
-  NODE_ENODES["$NAME"]="${ENODE}"
+  STATIC_ENODES+=("${ENODE}")
 
   echo "   Validator '${i}' -> Address: ${NODE_ADDRESS}"
 
@@ -136,7 +147,7 @@ for i in $(seq 1 2); do
   NODE_ADDRESS="${NON_VAL_KEYS[$KEY_INDEX]}"
 
   ENODE="enode://${PUB_KEY}@${NAME}.${NAMESPACE}.svc.cluster.local:30303"
-  NODE_ENODES["$NAME"]="${ENODE}"
+  STATIC_ENODES+=("${ENODE}")
 
   echo "   Bootnode '${i}' -> Address: ${NODE_ADDRESS}"
 
@@ -150,19 +161,16 @@ done
 
 # 8. Create genesis ConfigMap
 echo "8. Creating genesis ConfigMap..."
-kubectl create configmap besu-public-genesis \
-  --from-file=genesis.json="${TEMP_DIR}/validators/networkFiles/genesis.json" \
-  --namespace="${NAMESPACE}" \
-  --dry-run=client -o yaml > "${TEMP_DIR}/genesis-configmap.yaml"
-kubectl apply -f "${TEMP_DIR}/genesis-configmap.yaml"
+# Note: static-nodes.json is generated below but we need it in the same configmap.
+# We create the configmap after generating static-nodes.json (see step 9 below).
+# Placeholder - the actual configmap creation happens after static-nodes generation.
 
 # 9. Generate static-nodes.json
 echo "9. Generating static-nodes.json..."
 STATIC_NODES_FILE="${TEMP_DIR}/static-nodes.json"
 echo "[" > "${STATIC_NODES_FILE}"
 FIRST=true
-for NODE in "public-bootnode-1" "public-bootnode-2" "public-validator-1" "public-validator-2" "public-validator-3" "public-validator-4" "public-validator-5"; do
-  ENODE_URL="${NODE_ENODES[$NODE]}"
+for ENODE_URL in "${STATIC_ENODES[@]}"; do
   if [ "$FIRST" = true ]; then
     echo "  \"${ENODE_URL}\"" >> "${STATIC_NODES_FILE}"
     FIRST=false
@@ -172,14 +180,15 @@ for NODE in "public-bootnode-1" "public-bootnode-2" "public-validator-1" "public
 done
 echo "]" >> "${STATIC_NODES_FILE}"
 
-kubectl create configmap besu-public-static-nodes \
+kubectl create configmap besu-public-genesis \
+  --from-file=genesis.json="${GENESIS_PATH}" \
   --from-file=static-nodes.json="${STATIC_NODES_FILE}" \
   --namespace="${NAMESPACE}" \
-  --dry-run=client -o yaml > "${TEMP_DIR}/static-nodes-configmap.yaml"
-kubectl apply -f "${TEMP_DIR}/static-nodes-configmap.yaml"
+  --dry-run=client -o yaml > "${TEMP_DIR}/genesis-configmap.yaml"
+kubectl apply -f "${TEMP_DIR}/genesis-configmap.yaml"
 
 # Copy files to workspace for references
-cp "${TEMP_DIR}/validators/networkFiles/genesis.json" "${SCRIPT_DIR}/../3.configmap/genesis.json"
+cp "${GENESIS_PATH}" "${SCRIPT_DIR}/../3.configmap/genesis.json"
 cp "${STATIC_NODES_FILE}" "${SCRIPT_DIR}/../3.configmap/static-nodes.json"
 
 echo ""

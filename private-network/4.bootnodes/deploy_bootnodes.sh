@@ -48,6 +48,8 @@ spec:
         runAsNonRoot: true
         runAsUser: 1000
         fsGroup: 1000
+        seccompProfile:
+          type: RuntimeDefault
       containers:
         - name: besu
           image: ${BESU_IMAGE}
@@ -59,13 +61,7 @@ spec:
             - --node-private-key-file=/keys/key
             - --p2p-port=${PRIVATE_P2P_PORT}
             - --rpc-http-enabled=false
-            - --permissions-nodes-contract-enabled=true
-            - --permissions-nodes-contract-address=${NODE_INGRESS_ADDRESS}
-            - --static-nodes-file=/config/static-nodes.json
             - --nat-method=NONE
-            - --tls-keystore-file=/tls/keystore.pfx
-            - --tls-keystore-password-file=/tls/keystore-password
-            - --tls-known-clients-file=/tls/known-clients.txt
             - --metrics-enabled=true
             - --metrics-port=9545
             - --metrics-host=0.0.0.0
@@ -75,6 +71,8 @@ spec:
               drop:
                 - ALL
             readOnlyRootFilesystem: false
+            seccompProfile:
+              type: RuntimeDefault
           volumeMounts:
             - name: data
               mountPath: /data
@@ -88,11 +86,11 @@ spec:
               readOnly: true
           resources:
             requests:
-              cpu: "0.5"
-              memory: "1Gi"
+              cpu: "${BOOTNODE_CPU_REQUEST}"
+              memory: "${BOOTNODE_MEM_REQUEST}"
             limits:
-              cpu: "1"
-              memory: "2Gi"
+              cpu: "${BOOTNODE_CPU_LIMIT}"
+              memory: "${BOOTNODE_MEM_LIMIT}"
           ports:
             - name: p2p-tcp
               containerPort: 30303

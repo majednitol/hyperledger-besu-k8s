@@ -1,0 +1,310 @@
+# PersistentVolumes for local Minikube nfs mount (/Users/majedurrahman/nfs_share -> /mnt/data)
+# Maps all block storage to subdirectories inside the mounted NFS share, ensuring
+# data persistency and preventing minikube node disk-full crashes.
+
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: pv-private-genesis
+spec:
+  capacity:
+    storage: 1Gi
+  volumeMode: Filesystem
+  accessModes:
+    - ReadWriteOnce
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: standard
+  hostPath:
+    path: /mnt/data/private-genesis
+    type: DirectoryOrCreate
+  claimRef:
+    namespace: besu-private
+    name: genesis-output-pvc
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: pv-public-genesis
+spec:
+  capacity:
+    storage: 1Gi
+  volumeMode: Filesystem
+  accessModes:
+    - ReadWriteOnce
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: standard
+  hostPath:
+    path: /mnt/data/public-genesis
+    type: DirectoryOrCreate
+  claimRef:
+    namespace: besu-public
+    name: genesis-output-pvc
+---
+# Private Validators (7 nodes)
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: pv-private-val-afrinic
+spec:
+  capacity:
+    storage: 1Gi
+  volumeMode: Filesystem
+  accessModes:
+    - ReadWriteOnce
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: standard
+  hostPath:
+    path: /mnt/data/private-validator-afrinic
+    type: DirectoryOrCreate
+  claimRef:
+    namespace: besu-private
+    name: data-validator-afrinic-0
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: pv-private-val-apnic
+spec:
+  capacity:
+    storage: 1Gi
+  volumeMode: Filesystem
+  accessModes:
+    - ReadWriteOnce
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: standard
+  hostPath:
+    path: /mnt/data/private-validator-apnic
+    type: DirectoryOrCreate
+  claimRef:
+    namespace: besu-private
+    name: data-validator-apnic-0
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: pv-private-val-arin
+spec:
+  capacity:
+    storage: 1Gi
+  volumeMode: Filesystem
+  accessModes:
+    - ReadWriteOnce
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: standard
+  hostPath:
+    path: /mnt/data/private-validator-arin
+    type: DirectoryOrCreate
+  claimRef:
+    namespace: besu-private
+    name: data-validator-arin-0
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: pv-private-val-ripencc
+spec:
+  capacity:
+    storage: 1Gi
+  volumeMode: Filesystem
+  accessModes:
+    - ReadWriteOnce
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: standard
+  hostPath:
+    path: /mnt/data/private-validator-ripencc
+    type: DirectoryOrCreate
+  claimRef:
+    namespace: besu-private
+    name: data-validator-ripencc-0
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: pv-private-val-lacnic
+spec:
+  capacity:
+    storage: 1Gi
+  volumeMode: Filesystem
+  accessModes:
+    - ReadWriteOnce
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: standard
+  hostPath:
+    path: /mnt/data/private-validator-lacnic
+    type: DirectoryOrCreate
+  claimRef:
+    namespace: besu-private
+    name: data-validator-lacnic-0
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: pv-private-val-rono
+spec:
+  capacity:
+    storage: 1Gi
+  volumeMode: Filesystem
+  accessModes:
+    - ReadWriteOnce
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: standard
+  hostPath:
+    path: /mnt/data/private-validator-rono
+    type: DirectoryOrCreate
+  claimRef:
+    namespace: besu-private
+    name: data-validator-rono-0
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: pv-private-val-rono-2
+spec:
+  capacity:
+    storage: 1Gi
+  volumeMode: Filesystem
+  accessModes:
+    - ReadWriteOnce
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: standard
+  hostPath:
+    path: /mnt/data/private-validator-rono-2
+    type: DirectoryOrCreate
+  claimRef:
+    namespace: besu-private
+    name: data-validator-rono-2-0
+---
+# Public Validators (5 nodes)
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: pv-public-val-1
+spec:
+  capacity:
+    storage: 1Gi
+  volumeMode: Filesystem
+  accessModes:
+    - ReadWriteOnce
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: standard
+  hostPath:
+    path: /mnt/data/public-validator-1
+    type: DirectoryOrCreate
+  claimRef:
+    namespace: besu-public
+    name: data-public-validator-1-0
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: pv-public-val-2
+spec:
+  capacity:
+    storage: 1Gi
+  volumeMode: Filesystem
+  accessModes:
+    - ReadWriteOnce
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: standard
+  hostPath:
+    path: /mnt/data/public-validator-2
+    type: DirectoryOrCreate
+  claimRef:
+    namespace: besu-public
+    name: data-public-validator-2-0
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: pv-public-val-3
+spec:
+  capacity:
+    storage: 1Gi
+  volumeMode: Filesystem
+  accessModes:
+    - ReadWriteOnce
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: standard
+  hostPath:
+    path: /mnt/data/public-validator-3
+    type: DirectoryOrCreate
+  claimRef:
+    namespace: besu-public
+    name: data-public-validator-3-0
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: pv-public-val-4
+spec:
+  capacity:
+    storage: 1Gi
+  volumeMode: Filesystem
+  accessModes:
+    - ReadWriteOnce
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: standard
+  hostPath:
+    path: /mnt/data/public-validator-4
+    type: DirectoryOrCreate
+  claimRef:
+    namespace: besu-public
+    name: data-public-validator-4-0
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: pv-public-val-5
+spec:
+  capacity:
+    storage: 1Gi
+  volumeMode: Filesystem
+  accessModes:
+    - ReadWriteOnce
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: standard
+  hostPath:
+    path: /mnt/data/public-validator-5
+    type: DirectoryOrCreate
+  claimRef:
+    namespace: besu-public
+    name: data-public-validator-5-0
+---
+# Observability (Prometheus + Blockscout Postgres DB)
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: pv-prometheus-storage
+spec:
+  capacity:
+    storage: 10Gi
+  volumeMode: Filesystem
+  accessModes:
+    - ReadWriteOnce
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: standard
+  hostPath:
+    path: /mnt/data/prometheus-storage
+    type: DirectoryOrCreate
+  claimRef:
+    namespace: besu-app
+    name: prometheus-storage-pvc
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: pv-blockscout-db-storage
+spec:
+  capacity:
+    storage: 20Gi
+  volumeMode: Filesystem
+  accessModes:
+    - ReadWriteOnce
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: standard
+  hostPath:
+    path: /mnt/data/blockscout-db-storage
+    type: DirectoryOrCreate
+  claimRef:
+    namespace: besu-app
+    name: blockscout-db-pvc

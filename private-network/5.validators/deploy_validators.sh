@@ -16,6 +16,18 @@ VAL_ORGS=("afrinic" "apnic" "arin" "ripencc" "lacnic" "rono" "rono-2")
 
 echo "Deploying ${#VAL_ORGS[@]} private validators..."
 
+# Resolve bootnode enode URLs using ClusterIP addresses (Besu requires IP, not DNS)
+BOOTNODE_ENODES=""
+for bi in $(seq 1 "${PRIVATE_BOOTNODE_COUNT:-2}"); do
+  BN_IP=$(kubectl get svc "bootnode-${bi}" -n "${NAMESPACE}" -o jsonpath='{.spec.clusterIP}')
+  BN_PUBKEY=$(kubectl get secret "bootnode-${bi}-key" -n "${NAMESPACE}" -o jsonpath='{.data.key\.pub}' | base64 -d | sed 's/^0x//')
+  if [ -n "${BOOTNODE_ENODES}" ]; then
+    BOOTNODE_ENODES="${BOOTNODE_ENODES},"
+  fi
+  BOOTNODE_ENODES="${BOOTNODE_ENODES}enode://${BN_PUBKEY}@${BN_IP}:30303"
+done
+echo "  Resolved bootnode enodes: ${BOOTNODE_ENODES}"
+
 for ORG in "${VAL_ORGS[@]}"; do
   NAME="validator-${ORG}"
   SA_NAME="${NAME}-sa"
@@ -51,6 +63,8 @@ spec:
         runAsNonRoot: true
         runAsUser: 1000
         fsGroup: 1000
+        seccompProfile:
+          type: RuntimeDefault
       containers:
         - name: besu
           image: ${BESU_IMAGE}
@@ -62,24 +76,19 @@ spec:
             - --node-private-key-file=/keys/key
             - --p2p-port=${PRIVATE_P2P_PORT}
             - --rpc-http-enabled=false
-            - --permissions-nodes-contract-enabled=true
-            - --permissions-nodes-contract-address=${NODE_INGRESS_ADDRESS}
-            - --permissions-accounts-contract-enabled=true
-            - --permissions-accounts-contract-address=${ACCOUNT_INGRESS_ADDRESS}
-            - --static-nodes-file=/config/static-nodes.json
+            - --bootnodes=${BOOTNODE_ENODES}
             - --metrics-enabled=true
             - --metrics-port=9545
             - --metrics-host=0.0.0.0
             - --nat-method=NONE
-            - --tls-keystore-file=/tls/keystore.pfx
-            - --tls-keystore-password-file=/tls/keystore-password
-            - --tls-known-clients-file=/tls/known-clients.txt
           securityContext:
             allowPrivilegeEscalation: false
             capabilities:
               drop:
                 - ALL
             readOnlyRootFilesystem: false
+            seccompProfile:
+              type: RuntimeDefault
           resources:
             requests:
               cpu: "${VALIDATOR_CPU_REQUEST}"
@@ -121,6 +130,8 @@ spec:
               mountPath: /tls
               readOnly: true
       volumes:
+        - name: data
+          emptyDir: {}
         - name: genesis
           configMap:
             name: besu-private-genesis
@@ -130,17 +141,6 @@ spec:
         - name: tls
           secret:
             secretName: ${NAME}-tls
-  volumeClaimTemplates:
-    - metadata:
-        name: data
-      spec:
-        accessModes:
-          - ReadWriteOnce
-        resources:
-          requests:
-            storage: ${VALIDATOR_DISK}
-        # Uncomment below if you require a specific StorageClass (default is used otherwise)
-        # storageClassName: gp3
 ---
 apiVersion: v1
 kind: Service

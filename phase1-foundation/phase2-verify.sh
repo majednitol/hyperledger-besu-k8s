@@ -22,9 +22,9 @@ PASS=0
 FAIL=0
 WARN=0
 
-pass() { echo -e "  ${GREEN}✅ $1${NC}"; ((PASS++)); }
-fail() { echo -e "  ${RED}❌ $1${NC}"; ((FAIL++)); }
-warn() { echo -e "  ${YELLOW}⚠️  $1${NC}"; ((WARN++)); }
+pass() { echo -e "  ${GREEN}✅ $1${NC}"; ((PASS++)) || true; }
+fail() { echo -e "  ${RED}❌ $1${NC}"; ((FAIL++)) || true; }
+warn() { echo -e "  ${YELLOW}⚠️  $1${NC}"; ((WARN++)) || true; }
 
 echo ""
 echo "╔══════════════════════════════════════════════╗"
@@ -69,11 +69,11 @@ for SECRET in "${ALL_SECRETS[@]}"; do
       pass "Secret '${SECRET}' exists with key and key.pub"
     else
       fail "Secret '${SECRET}' exists but lacks key/key.pub keys"
-      ((MISSING_SECRETS++))
+      ((MISSING_SECRETS++)) || true
     fi
   else
     fail "Secret '${SECRET}' is missing"
-    ((MISSING_SECRETS++))
+    ((MISSING_SECRETS++)) || true
   fi
 done
 
@@ -140,11 +140,11 @@ for TLS in "${TLS_SECRETS[@]}"; do
       pass "TLS Secret '${TLS}' contains keystore.pfx and tls.crt"
     else
       fail "TLS Secret '${TLS}' lacks keystore.pfx or tls.crt"
-      ((MISSING_TLS++))
+      ((MISSING_TLS++)) || true
     fi
   else
     fail "TLS Secret '${TLS}' is missing"
-    ((MISSING_TLS++))
+    ((MISSING_TLS++)) || true
   fi
 done
 

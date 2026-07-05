@@ -46,7 +46,7 @@ spec:
   issuerRef:
     name: besu-private-ca-issuer
     kind: Issuer
-  commonName: ${dns_name}
+  commonName: ${name}
   dnsNames:
     - ${dns_name}
     - ${name}

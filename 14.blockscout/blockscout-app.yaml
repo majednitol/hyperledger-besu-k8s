@@ -1,0 +1,83 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: blockscout
+  namespace: besu-app
+  labels:
+    app: blockscout
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: blockscout
+  template:
+    metadata:
+      labels:
+        app: blockscout
+    spec:
+      containers:
+        - name: blockscout
+          image: blockscout/blockscout:v6.2.0
+          env:
+            - name: PORT
+              value: "4000"
+            - name: COIN
+              value: "RIR"
+            - name: ETHEREUM_JSONRPC_VARIANT
+              value: "besu"
+            - name: ETHEREUM_JSONRPC_HTTP_URL
+              value: "http://rpc-public.besu-public.svc.cluster.local:8545"
+            - name: ETHEREUM_JSONRPC_TRACE_URL
+              value: "http://rpc-public.besu-public.svc.cluster.local:8545"
+            - name: DATABASE_URL
+              value: "postgresql://postgres:blockscout_db_secret_pass@blockscout-db:5432/blockscout"
+            - name: REDIS_URL
+              value: "redis://blockscout-redis:6379/0"
+            - name: SECRET_KEY_BASE
+              value: "super_secret_key_base_must_be_64_bytes_long_12345678901234567890123456789012"
+            - name: INDEXER_DISABLE_PENDING_TRANSACTIONS_FETCHER
+              value: "true"
+          ports:
+            - containerPort: 4000
+              name: http
+          resources:
+            requests:
+              cpu: "500m"
+              memory: "1Gi"
+            limits:
+              cpu: "1.5"
+              memory: "2Gi"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: blockscout
+  namespace: besu-app
+spec:
+  ports:
+    - port: 4000
+      targetPort: 4000
+      name: http
+  selector:
+    app: blockscout
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: blockscout-ingress
+  namespace: besu-app
+  annotations:
+    kubernetes.io/ingress.class: "nginx"
+    nginx.ingress.kubernetes.io/limit-rps: "20"
+spec:
+  rules:
+    - host: explorer.yourdomain.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: blockscout
+                port:
+                  number: 4000

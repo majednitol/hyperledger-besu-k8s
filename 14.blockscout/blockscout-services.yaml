@@ -1,0 +1,109 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: blockscout-db-pvc
+  namespace: besu-app
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 20Gi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: blockscout-db
+  namespace: besu-app
+  labels:
+    app: blockscout-db
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: blockscout-db
+  template:
+    metadata:
+      labels:
+        app: blockscout-db
+    spec:
+      containers:
+        - name: postgres
+          image: postgres:15-alpine
+          env:
+            - name: POSTGRES_DB
+              value: blockscout
+            - name: POSTGRES_USER
+              value: postgres
+            - name: POSTGRES_PASSWORD
+              value: blockscout_db_secret_pass
+          ports:
+            - containerPort: 5432
+              name: db
+          resources:
+            requests:
+              cpu: "100m"
+              memory: "256Mi"
+            limits:
+              cpu: "500m"
+              memory: "512Mi"
+          volumeMounts:
+            - name: db-data
+              mountPath: /var/lib/postgresql/data
+      volumes:
+        - name: db-data
+          persistentVolumeClaim:
+            claimName: blockscout-db-pvc
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: blockscout-db
+  namespace: besu-app
+spec:
+  ports:
+    - port: 5432
+  selector:
+    app: blockscout-db
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: blockscout-redis
+  namespace: besu-app
+  labels:
+    app: blockscout-redis
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: blockscout-redis
+  template:
+    metadata:
+      labels:
+        app: blockscout-redis
+    spec:
+      containers:
+        - name: redis
+          image: redis:7-alpine
+          ports:
+            - containerPort: 6379
+              name: redis
+          resources:
+            requests:
+              cpu: "50m"
+              memory: "64Mi"
+            limits:
+              cpu: "100m"
+              memory: "128Mi"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: blockscout-redis
+  namespace: besu-app
+spec:
+  ports:
+    - port: 6379
+  selector:
+    app: blockscout-redis

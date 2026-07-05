@@ -64,7 +64,7 @@ spec:
             - --genesis-file=/config/genesis.json
             - --node-private-key-file=/keys/key
             - --p2p-port=${PUBLIC_P2P_PORT}
-            - --bootnodes=${PUBLIC_BOOTNODE_ENODE}
+            - --static-nodes-file=/config/static-nodes.json
             - --rpc-http-enabled=false
             - --metrics-enabled=true
             - --metrics-port=9545
@@ -78,11 +78,11 @@ spec:
             readOnlyRootFilesystem: false
           resources:
             requests:
-              cpu: "2"
-              memory: "4Gi"
+              cpu: "${VALIDATOR_CPU_REQUEST}"
+              memory: "${VALIDATOR_MEM_REQUEST}"
             limits:
-              cpu: "4"
-              memory: "8Gi"
+              cpu: "${VALIDATOR_CPU_LIMIT}"
+              memory: "${VALIDATOR_MEM_LIMIT}"
           # Run health checks on metrics port 9545 (HTTP RPC is disabled)
           livenessProbe:
             httpGet:
@@ -105,21 +105,14 @@ spec:
               mountPath: /keys
               readOnly: true
       volumes:
+        - name: data
+          emptyDir: {}
         - name: genesis
           configMap:
             name: besu-public-genesis
         - name: key
           secret:
             secretName: ${NAME}-key
-  volumeClaimTemplates:
-    - metadata:
-        name: data
-      spec:
-        accessModes:
-          - ReadWriteOnce
-        resources:
-          requests:
-            storage: 100Gi
 EOF
 done
 

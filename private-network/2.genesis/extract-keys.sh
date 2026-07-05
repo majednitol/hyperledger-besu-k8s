@@ -34,6 +34,8 @@ spec:
     runAsNonRoot: true
     runAsUser: 1000
     fsGroup: 1000
+    seccompProfile:
+      type: RuntimeDefault
   containers:
     - name: extractor
       image: alpine
@@ -45,6 +47,8 @@ spec:
             - ALL
         runAsNonRoot: true
         runAsUser: 1000
+        seccompProfile:
+          type: RuntimeDefault
       volumeMounts:
         - name: out
           mountPath: /out
@@ -61,7 +65,7 @@ kubectl wait --for=condition=Ready pod/genesis-extractor -n "${NAMESPACE}" --tim
 echo "3. Copying generated configuration locally..."
 rm -rf "${TEMP_DIR}"
 mkdir -p "${TEMP_DIR}"
-kubectl cp -n "${NAMESPACE}" genesis-extractor:/out/ "${TEMP_DIR}/"
+kubectl cp -n "${NAMESPACE}" genesis-extractor:/out "${TEMP_DIR}"
 
 echo "4. Tearing down helper pod..."
 kubectl delete pod genesis-extractor -n "${NAMESPACE}" --wait=false
@@ -70,9 +74,16 @@ kubectl delete pod genesis-extractor -n "${NAMESPACE}" --wait=false
 VAL_NAMES=("afrinic" "apnic" "arin" "ripencc" "lacnic" "rono" "rono-2")
 RPC_NAMES=("afrinic" "apnic" "arin" "ripencc" "lacnic" "rono")
 
-# Check we have the expected directories
-VAL_DIR="${TEMP_DIR}/validators/networkFiles/keys"
-NON_VAL_DIR="${TEMP_DIR}/non-validators/networkFiles/keys"
+# Check we have the expected directories (fallback for different Besu versions)
+if [ -d "${TEMP_DIR}/validators/networkFiles/keys" ]; then
+  VAL_DIR="${TEMP_DIR}/validators/networkFiles/keys"
+  NON_VAL_DIR="${TEMP_DIR}/non-validators/networkFiles/keys"
+  GENESIS_PATH="${TEMP_DIR}/validators/networkFiles/genesis.json"
+else
+  VAL_DIR="${TEMP_DIR}/validators/keys"
+  NON_VAL_DIR="${TEMP_DIR}/non-validators/keys"
+  GENESIS_PATH="${TEMP_DIR}/validators/genesis.json"
+fi
 
 if [ ! -d "${VAL_DIR}" ] || [ ! -d "${NON_VAL_DIR}" ]; then
   echo "ERROR: Generated directories not found. Check Job logs."
@@ -105,10 +116,11 @@ mkdir -p "${SECRETS_OUT}"
 # Create known-clients.txt temp file for cert-manager
 mkdir -p "${TEMP_DIR}/tls-fingerprints"
 
-# 6. Process validator keys
+## 6. Process validator keys
 echo "6. Creating Secrets for validators..."
-declare -A NODE_ENODES
-declare -A NODE_ADDRESSES
+ALL_ENODES=()
+ALL_ADDRESSES=()
+STATIC_ENODES=()
 
 for i in "${!VAL_NAMES[@]}"; do
   ORG="${VAL_NAMES[$i]}"
@@ -118,11 +130,12 @@ for i in "${!VAL_NAMES[@]}"; do
   # Clean the public key (remove leading 0x if present)
   PUB_KEY=$(cat "${KEY_DIR}/key.pub" | sed 's/^0x//')
   NODE_ADDRESS="${VAL_KEYS[$i]}"
-  NODE_ADDRESSES["$NAME"]="${NODE_ADDRESS}"
+  ALL_ADDRESSES+=("${NODE_ADDRESS}")
   
   # Format enode URL
   ENODE="enode://${PUB_KEY}@${NAME}-0.${NAME}.${NAMESPACE}.svc.cluster.local:30303"
-  NODE_ENODES["$NAME"]="${ENODE}"
+  ALL_ENODES+=("${ENODE}")
+  STATIC_ENODES+=("${ENODE}")
 
   echo "   Validator '${ORG}' -> Address: ${NODE_ADDRESS}"
 
@@ -144,10 +157,11 @@ for i in 1 2; do
 
   PUB_KEY=$(cat "${KEY_DIR}/key.pub" | sed 's/^0x//')
   NODE_ADDRESS="${NON_VAL_KEYS[$KEY_INDEX]}"
-  NODE_ADDRESSES["$NAME"]="${NODE_ADDRESS}"
+  ALL_ADDRESSES+=("${NODE_ADDRESS}")
 
   ENODE="enode://${PUB_KEY}@${NAME}.${NAMESPACE}.svc.cluster.local:30303"
-  NODE_ENODES["$NAME"]="${ENODE}"
+  ALL_ENODES+=("${ENODE}")
+  STATIC_ENODES+=("${ENODE}")
 
   echo "   Bootnode '${i}' -> Address: ${NODE_ADDRESS}"
 
@@ -169,10 +183,10 @@ for i in "${!RPC_NAMES[@]}"; do
 
   PUB_KEY=$(cat "${KEY_DIR}/key.pub" | sed 's/^0x//')
   NODE_ADDRESS="${NON_VAL_KEYS[$KEY_INDEX]}"
-  NODE_ADDRESSES["$NAME"]="${NODE_ADDRESS}"
+  ALL_ADDRESSES+=("${NODE_ADDRESS}")
 
   ENODE="enode://${PUB_KEY}@${NAME}.${NAMESPACE}.svc.cluster.local:30303"
-  NODE_ENODES["$NAME"]="${ENODE}"
+  ALL_ENODES+=("${ENODE}")
 
   echo "   RPC Node '${ORG}' -> Address: ${NODE_ADDRESS}"
 
@@ -184,13 +198,8 @@ for i in "${!RPC_NAMES[@]}"; do
   kubectl apply -f "${SECRETS_OUT}/${NAME}-key.yaml"
 done
 
-# 9. Create genesis ConfigMap
-echo "9. Creating genesis ConfigMap..."
-kubectl create configmap besu-private-genesis \
-  --from-file=genesis.json="${TEMP_DIR}/validators/networkFiles/genesis.json" \
-  --namespace="${NAMESPACE}" \
-  --dry-run=client -o yaml > "${TEMP_DIR}/genesis-configmap.yaml"
-kubectl apply -f "${TEMP_DIR}/genesis-configmap.yaml"
+# 9. Genesis ConfigMap is created after static-nodes.json generation (step 10 below).
+# This ensures both files are bundled in the same ConfigMap.
 
 # 10. Generate static-nodes.json
 echo "10. Generating static-nodes.json..."
@@ -198,8 +207,7 @@ STATIC_NODES_FILE="${TEMP_DIR}/static-nodes.json"
 echo "[" > "${STATIC_NODES_FILE}"
 # Include bootnodes and validators in static nodes
 FIRST=true
-for NODE in "bootnode-1" "bootnode-2" "validator-afrinic" "validator-apnic" "validator-arin" "validator-ripencc" "validator-lacnic" "validator-rono" "validator-rono-2"; do
-  ENODE_URL="${NODE_ENODES[$NODE]}"
+for ENODE_URL in "${STATIC_ENODES[@]}"; do
   if [ "$FIRST" = true ]; then
     echo "  \"${ENODE_URL}\"" >> "${STATIC_NODES_FILE}"
     FIRST=false
@@ -209,11 +217,13 @@ for NODE in "bootnode-1" "bootnode-2" "validator-afrinic" "validator-apnic" "val
 done
 echo "]" >> "${STATIC_NODES_FILE}"
 
-kubectl create configmap besu-private-static-nodes \
+echo "10b. Creating combined genesis ConfigMap (genesis.json + static-nodes.json)..."
+kubectl create configmap besu-private-genesis \
+  --from-file=genesis.json="${GENESIS_PATH}" \
   --from-file=static-nodes.json="${STATIC_NODES_FILE}" \
   --namespace="${NAMESPACE}" \
-  --dry-run=client -o yaml > "${TEMP_DIR}/static-nodes-configmap.yaml"
-kubectl apply -f "${TEMP_DIR}/static-nodes-configmap.yaml"
+  --dry-run=client -o yaml > "${TEMP_DIR}/genesis-configmap.yaml"
+kubectl apply -f "${TEMP_DIR}/genesis-configmap.yaml"
 
 # 11. Generate permissions_config.toml
 echo "11. Generating permissions_config.toml..."
@@ -225,8 +235,7 @@ EOF
 
 # Add all enodes to nodes-allowlist
 FIRST=true
-for NODE in "${!NODE_ENODES[@]}"; do
-  ENODE_URL="${NODE_ENODES[$NODE]}"
+for ENODE_URL in "${ALL_ENODES[@]}"; do
   if [ "$FIRST" = true ]; then
     echo "  \"${ENODE_URL}\"" >> "${PERM_FILE}"
     FIRST=false
@@ -238,8 +247,7 @@ echo "]" >> "${PERM_FILE}"
 
 echo "accounts-allowlist=[" >> "${PERM_FILE}"
 FIRST=true
-for NODE in "${!NODE_ADDRESSES[@]}"; do
-  ADDR="${NODE_ADDRESSES[$NODE]}"
+for ADDR in "${ALL_ADDRESSES[@]}"; do
   if [ "$FIRST" = true ]; then
     echo "  \"${ADDR}\"" >> "${PERM_FILE}"
     FIRST=false
@@ -256,7 +264,7 @@ kubectl create configmap besu-private-permissions \
 kubectl apply -f "${TEMP_DIR}/permissions-configmap.yaml"
 
 # Copy files to workspace for deployment references (configmap folder)
-cp "${TEMP_DIR}/validators/networkFiles/genesis.json" "${SCRIPT_DIR}/../3.configmap/genesis.json"
+cp "${GENESIS_PATH}" "${SCRIPT_DIR}/../3.configmap/genesis.json"
 cp "${STATIC_NODES_FILE}" "${SCRIPT_DIR}/../3.configmap/static-nodes.json"
 cp "${PERM_FILE}" "${SCRIPT_DIR}/../3.configmap/permissions_config.toml"
 

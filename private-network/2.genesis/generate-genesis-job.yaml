@@ -68,7 +68,6 @@ metadata:
   name: generate-genesis
   namespace: besu-private
 spec:
-  restartPolicy: Never
   backoffLimit: 3
   template:
     spec:
@@ -77,6 +76,8 @@ spec:
         runAsNonRoot: true
         runAsUser: 1000
         fsGroup: 1000
+        seccompProfile:
+          type: RuntimeDefault
       containers:
         - name: generate-genesis
           image: hyperledger/besu:24.12.2

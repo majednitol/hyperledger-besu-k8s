@@ -78,11 +78,11 @@ spec:
             readOnlyRootFilesystem: false
           resources:
             requests:
-              cpu: "500m"
-              memory: "1Gi"
+              cpu: "${RPC_CPU_REQUEST}"
+              memory: "${RPC_MEM_REQUEST}"
             limits:
-              cpu: "1"
-              memory: "2Gi"
+              cpu: "${RPC_CPU_LIMIT}"
+              memory: "${RPC_MEM_LIMIT}"
           livenessProbe:
             httpGet:
               path: /liveness

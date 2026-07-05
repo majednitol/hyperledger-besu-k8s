@@ -21,9 +21,9 @@ PASS=0
 FAIL=0
 WARN=0
 
-pass() { echo -e "  ${GREEN}✅ [PASS] $1${NC}"; ((PASS++)); }
-fail() { echo -e "  ${RED}❌ [FAIL] $1${NC}"; ((FAIL++)); }
-warn() { echo -e "  ${YELLOW}⚠️  [WARN] $1${NC}"; ((WARN++)); }
+pass() { echo -e "  ${GREEN}✅ [PASS] $1${NC}"; ((PASS++)) || true; }
+fail() { echo -e "  ${RED}❌ [FAIL] $1${NC}"; ((FAIL++)) || true; }
+warn() { echo -e "  ${YELLOW}⚠️  [WARN] $1${NC}"; ((WARN++)) || true; }
 
 echo ""
 echo "╔══════════════════════════════════════════════╗"

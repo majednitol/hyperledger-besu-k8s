@@ -18,6 +18,10 @@ echo "╚═══════════════════════�
 
 echo ""
 echo "Step 1/6: Storage (PV/PVC)..."
+if [ -f "${SCRIPT_DIR}/minikube-storage.yaml" ]; then
+  echo "  Applying local PersistentVolumes for Minikube hostPath mount..."
+  kubectl apply -f "${SCRIPT_DIR}/minikube-storage.yaml"
+fi
 kubectl apply -n "$PUBLIC_NAMESPACE" -f "${SCRIPT_DIR}/../public-network/1.storage/pvc.yaml"
 
 echo "Step 2/6: Genesis generation..."
