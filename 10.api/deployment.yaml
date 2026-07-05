@@ -1,0 +1,116 @@
+# K8s Deployment and Services for the RIR API Gateway and Dashboards.
+# Deploys in the besu-app namespace, fronted by Nginx Ingress with SSL.
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: api-gateway
+  namespace: besu-app
+  labels:
+    app: api-gateway
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: api-gateway
+  template:
+    metadata:
+      labels:
+        app: api-gateway
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        fsGroup: 1000
+      containers:
+        - name: api-gateway
+          image: localhost:5001/api-gateway:latest
+          imagePullPolicy: IfNotPresent
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+            readOnlyRootFilesystem: false
+          ports:
+            - containerPort: 3000
+              name: http
+          resources:
+            requests:
+              cpu: "100m"
+              memory: "256Mi"
+            limits:
+              cpu: "500m"
+              memory: "512Mi"
+          env:
+            - name: PORT
+              value: "3000"
+            - name: PRIVATE_REGISTRY_ADDRESS
+              valueFrom:
+                configMapKeyRef:
+                  name: bridge-addresses
+                  key: privateRegistryAddress
+            - name: PUBLIC_ANCHOR_ADDRESS
+              valueFrom:
+                configMapKeyRef:
+                  name: bridge-addresses
+                  key: publicAnchorAddress
+            - name: JWT_SECRET
+              value: "dev-rir-secret-key-123456789"
+            - name: PUBLIC_RPC_URL
+              value: "http://rpc-public.besu-public.svc.cluster.local:8545"
+            - name: RPC_AFRINIC_URL
+              value: "http://rpc-rono.besu-private.svc.cluster.local:8545" # Shared private rpc nodes
+            - name: RPC_APNIC_URL
+              value: "http://rpc-rono.besu-private.svc.cluster.local:8545"
+            - name: RPC_ARIN_URL
+              value: "http://rpc-rono.besu-private.svc.cluster.local:8545"
+            - name: RPC_RIPENCC_URL
+              value: "http://rpc-rono.besu-private.svc.cluster.local:8545"
+            - name: RPC_LACNIC_URL
+              value: "http://rpc-rono.besu-private.svc.cluster.local:8545"
+            - name: RPC_RONO_URL
+              value: "http://rpc-rono.besu-private.svc.cluster.local:8545"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: api-gateway
+  namespace: besu-app
+  labels:
+    app: api-gateway
+spec:
+  type: ClusterIP
+  selector:
+    app: api-gateway
+  ports:
+    - name: http
+      port: 3000
+      targetPort: 3000
+      protocol: TCP
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: api-gateway-ingress
+  namespace: besu-app
+  annotations:
+    kubernetes.io/ingress.class: "nginx"
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"
+    nginx.ingress.kubernetes.io/limit-rps: "20"
+spec:
+  tls:
+    - hosts:
+        - app.yourdomain.com
+      secretName: app-tls-cert
+  rules:
+    - host: app.yourdomain.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: api-gateway
+                port:
+                  number: 3000

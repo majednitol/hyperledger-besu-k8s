@@ -1,0 +1,74 @@
+# NetworkPolicies for isolation of the public namespace.
+# Configures default-deny-all and selective opens:
+# - Open egress/ingress to internet on P2P port 30303 (TCP/UDP)
+# - Ingress on port 8545 from nginx Ingress controller
+# - Egress to DNS name servers (CoreDNS)
+# - Absolutely NO paths allowed to enter or communicate with the besu-private namespace.
+
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: default-deny-all
+  namespace: besu-public
+spec:
+  podSelector: {}
+  policyTypes:
+    - Ingress
+    - Egress
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-intra-public-p2p-and-ingress
+  namespace: besu-public
+spec:
+  podSelector:
+    matchLabels:
+      network: public
+  ingress:
+    # 1. Allow P2P traffic from other public network pods
+    - from:
+        - podSelector:
+            matchLabels:
+              network: public
+    # 2. Allow incoming P2P connections from the internet
+    - from: []
+      ports:
+        - protocol: TCP
+          port: 30303
+        - protocol: UDP
+          port: 30303
+    # 3. Allow incoming JSON-RPC traffic on port 8545
+    - from: []
+      ports:
+        - protocol: TCP
+          port: 8545
+    # 4. Allow ingress traffic from the API/UI application namespace
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: besu-app
+  egress:
+    # 1. Allow outbound P2P to public namespace pods
+    - to:
+        - podSelector:
+            matchLabels:
+              network: public
+    # 2. Allow outbound P2P connections to any node on the internet (open discoverability)
+    - to: []
+      ports:
+        - protocol: TCP
+          port: 30303
+        - protocol: UDP
+          port: 30303
+    # 3. Allow outbound DNS queries to CoreDNS
+    - to:
+        - namespaceSelector: {}
+          podSelector:
+            matchLabels:
+              k8s-app: kube-dns
+      ports:
+        - protocol: UDP
+          port: 53
+        - protocol: TCP
+          port: 53

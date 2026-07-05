@@ -1,0 +1,67 @@
+# RBAC: App Layer Deployer
+# Scope: besu-app namespace only
+# Principals: app-deployers group (API/UI/bridge/monitoring teams)
+#
+# More permissive than network-operator roles because the app layer
+# iterates faster (CI/CD deploys). Still no secret writes or cross-namespace access.
+
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: app-layer-deployer
+  namespace: besu-app
+rules:
+  # Deployments — manage API, UI, and monitoring workloads
+  - apiGroups: ["apps"]
+    resources: ["deployments"]
+    verbs: ["get", "list", "watch", "create", "update", "patch"]
+    # NOTE: Includes "create" — app layer iterates via CI/CD pipeline
+
+  # Pods — view, troubleshoot, and manage
+  - apiGroups: [""]
+    resources: ["pods", "pods/log"]
+    verbs: ["get", "list", "watch"]
+
+  # Services — create and manage app services
+  - apiGroups: [""]
+    resources: ["services"]
+    verbs: ["get", "list", "watch", "create", "update"]
+
+  # ConfigMaps — manage app configuration
+  - apiGroups: [""]
+    resources: ["configmaps"]
+    verbs: ["get", "list", "watch", "create", "update"]
+
+  # Secrets — read-only (relayer key, API credentials are managed separately)
+  - apiGroups: [""]
+    resources: ["secrets"]
+    verbs: ["get"]
+
+  # Jobs and CronJobs — manage anchor-service CronJob
+  - apiGroups: ["batch"]
+    resources: ["jobs", "cronjobs"]
+    verbs: ["get", "list", "watch", "create", "update", "patch"]
+
+  # Ingress — manage app-level routing (API, UI, explorer)
+  - apiGroups: ["networking.k8s.io"]
+    resources: ["ingresses"]
+    verbs: ["get", "list", "watch", "create", "update"]
+
+  # NetworkPolicies — view (modifications go through security review)
+  - apiGroups: ["networking.k8s.io"]
+    resources: ["networkpolicies"]
+    verbs: ["get", "list", "watch"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: app-layer-deployer-binding
+  namespace: besu-app
+subjects:
+  - kind: Group
+    name: app-deployers
+    apiGroup: rbac.authorization.k8s.io
+roleRef:
+  kind: Role
+  name: app-layer-deployer
+  apiGroup: rbac.authorization.k8s.io

@@ -1,0 +1,81 @@
+# Kubernetes NetworkPolicies for Private Network namespace (besu-private).
+# Enforces absolute network isolation.
+
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: default-deny-all
+  namespace: besu-private
+spec:
+  podSelector: {}
+  policyTypes:
+    - Ingress
+    - Egress
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-intra-private-p2p-and-rpc-clients
+  namespace: besu-private
+spec:
+  podSelector:
+    matchLabels:
+      network: private
+  policyTypes:
+    - Ingress
+    - Egress
+  ingress:
+    # 1. Allow P2P P2P (30303) and Metrics (9545) from other private nodes in the same namespace
+    - from:
+        - podSelector:
+            matchLabels:
+              network: private
+      ports:
+        - protocol: TCP
+          port: 30303
+        - protocol: UDP
+          port: 30303
+        - protocol: TCP
+          port: 9545
+    # 2. Allow JSON-RPC (8545) and Metrics (9545) scraping from the app layer namespace (besu-app)
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: besu-app
+      ports:
+        - protocol: TCP
+          port: 8545
+        - protocol: TCP
+          port: 9545
+  egress:
+    # 1. Allow P2P Egress (30303) to other private nodes in the same namespace
+    - to:
+        - podSelector:
+            matchLabels:
+              network: private
+      ports:
+        - protocol: TCP
+          port: 30303
+        - protocol: UDP
+          port: 30303
+    # 2. Allow Egress to Prometheus/Metrics scraping in besu-app namespace (required for metrics push/replies)
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: besu-app
+      ports:
+        - protocol: TCP
+          port: 9545
+    # 3. Allow DNS Egress to CoreDNS pods in kube-system namespace
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: kube-system
+          podSelector:
+            matchLabels:
+              k8s-app: kube-dns
+      ports:
+        - protocol: UDP
+          port: 53
+        - protocol: TCP
+          port: 53

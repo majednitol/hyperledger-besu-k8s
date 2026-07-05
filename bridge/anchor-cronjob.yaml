@@ -1,0 +1,105 @@
+# CronJob to periodically snapshot private PrefixRegistry and submit anchors on the public chain.
+# Runs in the besu-app namespace, isolated with strict NetworkPolicies.
+
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: registry-anchor
+  namespace: besu-app
+spec:
+  schedule: "*/10 * * * *" # Runs every 10 minutes
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    spec:
+      template:
+        metadata:
+          labels:
+            app: registry-anchor
+        spec:
+          restartPolicy: OnFailure
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 1000
+            fsGroup: 1000
+          containers:
+            - name: anchor-service
+              image: localhost:5001/anchor-service:latest
+              imagePullPolicy: IfNotPresent
+              securityContext:
+                allowPrivilegeEscalation: false
+                capabilities:
+                  drop:
+                    - ALL
+                readOnlyRootFilesystem: false
+              env:
+                - name: PRIVATE_RPC_URL
+                  value: "http://rpc-rono.besu-private.svc.cluster.local:8545"
+                - name: PUBLIC_RPC_URL
+                  value: "http://public-rpc.besu-public.svc.cluster.local:8545"
+                - name: PRIVATE_REGISTRY_ADDRESS
+                  valueFrom:
+                    configMapKeyRef:
+                      name: bridge-addresses
+                      key: privateRegistryAddress
+                - name: PUBLIC_ANCHOR_ADDRESS
+                  valueFrom:
+                    configMapKeyRef:
+                      name: bridge-addresses
+                      key: publicAnchorAddress
+                - name: RELAYER_KEY
+                  valueFrom:
+                    secretKeyRef:
+                      name: relayer-key
+                      key: privateKey
+---
+# NetworkPolicy for the besu-app namespace to restrict relayer egress.
+# Allows egress only to the private RPC, public RPC, and kube-dns.
+
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: relayer-egress-policy
+  namespace: besu-app
+spec:
+  podSelector:
+    matchLabels:
+      app: registry-anchor
+  policyTypes:
+    - Egress
+  egress:
+    # 1. Egress to private RPC
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: besu-private
+          podSelector:
+            matchLabels:
+              app: rpc-rono
+      ports:
+        - protocol: TCP
+          port: 8545
+    # 2. Egress to public RPC
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: besu-public
+          podSelector:
+            matchLabels:
+              app: public-rpc
+      ports:
+        - protocol: TCP
+          port: 8545
+    # 3. Egress to CoreDNS
+    - to:
+        - namespaceSelector: {}
+          podSelector:
+            matchLabels:
+              k8s-app: kube-dns
+      ports:
+        - protocol: UDP
+          port: 53
+        - protocol: TCP
+          port: 53
+

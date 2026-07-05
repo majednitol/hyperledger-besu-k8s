@@ -1,0 +1,74 @@
+# RBAC: Private Network Operator
+# Scope: besu-private namespace only
+# Principals: rir-admins group (6 RIR organizations + rono coordinator)
+#
+# This role allows operational management of the private blockchain network
+# without granting destructive or cross-namespace capabilities.
+
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: private-network-operator
+  namespace: besu-private
+rules:
+  # StatefulSets and Deployments — manage validators, bootnodes, RPC nodes
+  - apiGroups: ["apps"]
+    resources: ["statefulsets", "deployments"]
+    verbs: ["get", "list", "watch", "update", "patch"]
+    # NOTE: No "create" or "delete" — new deployments go through CI/CD pipeline;
+    # deletions use a separate, audited break-glass role
+
+  # Pods — view and troubleshoot running nodes
+  - apiGroups: [""]
+    resources: ["pods", "pods/log", "pods/exec"]
+    verbs: ["get", "list", "watch"]
+    # NOTE: No "exec" verb in v1 — add via break-glass if emergency debugging needed
+
+  # Services — view network topology
+  - apiGroups: [""]
+    resources: ["services", "endpoints"]
+    verbs: ["get", "list", "watch"]
+
+  # ConfigMaps — view genesis, static-nodes, permissions config
+  - apiGroups: [""]
+    resources: ["configmaps"]
+    verbs: ["get", "list", "watch"]
+
+  # Secrets — read-only; key rotation uses a separate audited path (Phase 2 runbook)
+  - apiGroups: [""]
+    resources: ["secrets"]
+    verbs: ["get"]
+
+  # Jobs — view genesis generation and one-off tasks
+  - apiGroups: ["batch"]
+    resources: ["jobs", "cronjobs"]
+    verbs: ["get", "list", "watch"]
+
+  # PodDisruptionBudgets — view but not modify (protects validator availability)
+  - apiGroups: ["policy"]
+    resources: ["poddisruptionbudgets"]
+    verbs: ["get", "list", "watch"]
+
+  # NetworkPolicies — view isolation rules
+  - apiGroups: ["networking.k8s.io"]
+    resources: ["networkpolicies"]
+    verbs: ["get", "list", "watch"]
+
+  # Certificates — view TLS cert status (cert-manager resources)
+  - apiGroups: ["cert-manager.io"]
+    resources: ["certificates", "issuers"]
+    verbs: ["get", "list", "watch"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: private-network-operator-binding
+  namespace: besu-private
+subjects:
+  - kind: Group
+    name: rir-admins
+    apiGroup: rbac.authorization.k8s.io
+roleRef:
+  kind: Role
+  name: private-network-operator
+  apiGroup: rbac.authorization.k8s.io

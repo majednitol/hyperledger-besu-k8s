@@ -1,0 +1,18 @@
+# PersistentVolumeClaims for genesis configuration generation.
+# Validator data PVCs are created dynamically by the validator StatefulSets (Phase 3).
+# This claim holds the outputs of the genesis configuration generator (keys + genesis.json).
+
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: genesis-output-pvc
+  namespace: besu-private
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+  # Leave storageClassName empty to use the cluster's default StorageClass.
+  # If a specific StorageClass is required (e.g. gp3, premium-rwo), uncomment and set below:
+  # storageClassName: gp3

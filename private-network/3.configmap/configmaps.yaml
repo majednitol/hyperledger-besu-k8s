@@ -1,0 +1,36 @@
+# Declarative ConfigMap templates for Besu Private Network.
+# NOTE: These ConfigMaps are dynamically generated and populated by:
+#       private-network/2.genesis/extract-keys.sh
+#
+# This file serves as a reference for the manifests applied to the cluster.
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: besu-private-genesis-placeholder
+  namespace: besu-private
+data:
+  genesis.json: |
+    {
+      "comment": "Dynamically populated by extract-keys.sh"
+    }
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: besu-private-static-nodes-placeholder
+  namespace: besu-private
+data:
+  static-nodes.json: |
+    []
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: besu-private-permissions-placeholder
+  namespace: besu-private
+data:
+  permissions_config.toml: |
+    # Dynamically populated by extract-keys.sh
+    nodes-allowlist=[]
+    accounts-allowlist=[]

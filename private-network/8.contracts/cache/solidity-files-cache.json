@@ -1,0 +1,229 @@
+{
+  "_format": "hh-sol-cache-2",
+  "files": {
+    "/Users/majedurrahman/coding/hyperledger besu /besu-network/private-network/8.contracts/contracts/PrefixRegistry.sol": {
+      "lastModificationDate": 1783248109243,
+      "contentHash": "d2785a3e83e11478b2f67f9b01572bc5",
+      "sourceName": "contracts/PrefixRegistry.sol",
+      "solcConfig": {
+        "version": "0.8.20",
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 200
+          },
+          "evmVersion": "paris",
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [],
+      "versionPragmas": [
+        "^0.8.20"
+      ],
+      "artifacts": [
+        "PrefixRegistry"
+      ]
+    },
+    "/Users/majedurrahman/coding/hyperledger besu /besu-network/private-network/8.contracts/contracts/permissioning/AccountIngress.sol": {
+      "lastModificationDate": 1783248130392,
+      "contentHash": "2bd0e76a5067bd7aea6d2177fdab196a",
+      "sourceName": "contracts/permissioning/AccountIngress.sol",
+      "solcConfig": {
+        "version": "0.8.20",
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 200
+          },
+          "evmVersion": "paris",
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [
+        "./AccountRules.sol"
+      ],
+      "versionPragmas": [
+        "^0.8.20"
+      ],
+      "artifacts": [
+        "AccountIngress"
+      ]
+    },
+    "/Users/majedurrahman/coding/hyperledger besu /besu-network/private-network/8.contracts/contracts/permissioning/AccountRules.sol": {
+      "lastModificationDate": 1783248121226,
+      "contentHash": "beb2e4dcc2e4b7e76aa84b8de54962af",
+      "sourceName": "contracts/permissioning/AccountRules.sol",
+      "solcConfig": {
+        "version": "0.8.20",
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 200
+          },
+          "evmVersion": "paris",
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [
+        "./Admin.sol"
+      ],
+      "versionPragmas": [
+        "^0.8.20"
+      ],
+      "artifacts": [
+        "AccountRules"
+      ]
+    },
+    "/Users/majedurrahman/coding/hyperledger besu /besu-network/private-network/8.contracts/contracts/permissioning/Admin.sol": {
+      "lastModificationDate": 1783248117177,
+      "contentHash": "5a0e4bfa4da56b6e559375fd9af076a6",
+      "sourceName": "contracts/permissioning/Admin.sol",
+      "solcConfig": {
+        "version": "0.8.20",
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 200
+          },
+          "evmVersion": "paris",
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [],
+      "versionPragmas": [
+        "^0.8.20"
+      ],
+      "artifacts": [
+        "Admin"
+      ]
+    },
+    "/Users/majedurrahman/coding/hyperledger besu /besu-network/private-network/8.contracts/contracts/permissioning/NodeRules.sol": {
+      "lastModificationDate": 1783248119206,
+      "contentHash": "0ac7b6f114d025dfcdd688e4300b5496",
+      "sourceName": "contracts/permissioning/NodeRules.sol",
+      "solcConfig": {
+        "version": "0.8.20",
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 200
+          },
+          "evmVersion": "paris",
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [
+        "./Admin.sol"
+      ],
+      "versionPragmas": [
+        "^0.8.20"
+      ],
+      "artifacts": [
+        "NodeRules"
+      ]
+    },
+    "/Users/majedurrahman/coding/hyperledger besu /besu-network/private-network/8.contracts/contracts/permissioning/NodeIngress.sol": {
+      "lastModificationDate": 1783248128319,
+      "contentHash": "53b3d817f90cbebae9adb986e339c19d",
+      "sourceName": "contracts/permissioning/NodeIngress.sol",
+      "solcConfig": {
+        "version": "0.8.20",
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 200
+          },
+          "evmVersion": "paris",
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [
+        "./NodeRules.sol"
+      ],
+      "versionPragmas": [
+        "^0.8.20"
+      ],
+      "artifacts": [
+        "NodeIngress"
+      ]
+    }
+  }
+}

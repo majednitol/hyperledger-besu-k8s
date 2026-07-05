@@ -1,0 +1,22 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: alertmanager-config
+  namespace: besu-app
+data:
+  alertmanager.yml: |
+    global:
+      resolve_timeout: 5m
+
+    route:
+      group_by: ['alertname']
+      group_wait: 10s
+      group_interval: 10s
+      repeat_interval: 1h
+      receiver: 'webhook-receiver'
+
+    receivers:
+      - name: 'webhook-receiver'
+        webhook_configs:
+          - url: 'http://alert-receiver.local/notify'
+            send_resolved: true

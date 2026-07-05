@@ -1,0 +1,13 @@
+# PersistentVolume definitions for Hyperledger Besu private network.
+#
+# NOTE: In production environments with dynamic storage provisioning enabled
+# (e.g. AWS EFS/EBS, GKE persistent disk, AKS Azure Disk), you do NOT need to
+# manually create PersistentVolumes (PVs). The StorageClass will automatically
+# provision the PV when the PVC is created.
+#
+# If you are running on a bare-metal cluster or minikube without dynamic provisioning:
+# 1. Customize the hostPath or local directory paths below.
+# 2. Apply this file using: kubectl apply -f pv.yaml
+# 3. Then apply pvc.yaml
+#
+# For cloud deployments, keep this file as reference only.

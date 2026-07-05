@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Private Ledger Block Explorer</title>
+  <style>
+    :root {
+      --bg-color: #0b0f19;
+      --card-bg: #0f172a;
+      --border-color: #1e293b;
+      --text-color: #e2e8f0;
+      --text-muted: #64748b;
+      --neon-blue: #3b82f6;
+      --neon-green: #10b981;
+    }
+    body {
+      background-color: var(--bg-color);
+      color: var(--text-color);
+      font-family: 'Consolas', monospace;
+      margin: 0;
+      padding: 20px;
+    }
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 2px solid var(--border-color);
+      padding-bottom: 15px;
+      margin-bottom: 20px;
+    }
+    h1 {
+      margin: 0;
+      font-size: 20px;
+      letter-spacing: 1px;
+    }
+    .status-badge {
+      background-color: rgba(59, 130, 246, 0.1);
+      color: var(--neon-blue);
+      border: 1px solid var(--neon-blue);
+      padding: 3px 10px;
+      font-size: 11px;
+      font-weight: bold;
+    }
+    .controls {
+      display: flex;
+      gap: 15px;
+      margin-bottom: 20px;
+    }
+    input {
+      background-color: #020617;
+      border: 1px solid var(--border-color);
+      color: var(--text-color);
+      padding: 8px 12px;
+      font-family: inherit;
+      flex: 1;
+    }
+    button {
+      background-color: transparent;
+      border: 1px solid var(--neon-blue);
+      color: var(--neon-blue);
+      padding: 8px 15px;
+      cursor: pointer;
+      font-family: inherit;
+      font-weight: bold;
+      transition: all 0.2s;
+    }
+    button:hover {
+      background-color: var(--neon-blue);
+      color: #000;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: 2fr 1fr;
+      gap: 20px;
+    }
+    .card {
+      background-color: var(--card-bg);
+      border: 1px solid var(--border-color);
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+    }
+    .card-title {
+      font-weight: bold;
+      margin-bottom: 15px;
+      color: var(--text-muted);
+      font-size: 12px;
+      letter-spacing: 1px;
+      border-bottom: 1px solid var(--border-color);
+      padding-bottom: 5px;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    th, td {
+      padding: 10px;
+      text-align: left;
+      border-bottom: 1px solid var(--border-color);
+    }
+    th {
+      color: var(--text-muted);
+      font-size: 11px;
+    }
+    tr:hover {
+      background-color: #1e293b;
+    }
+    .text-green { color: var(--neon-green); }
+    .text-muted { color: var(--text-muted); }
+    .text-mono { font-family: inherit; }
+  </style>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/6.11.1/ethers.umd.min.js"></script>
+</head>
+<body>
+  <header>
+    <h1>[INTERNAL] PRIVATE NETWORK EXPLORER</h1>
+    <span class="status-badge">PRIVATE CHAIN ID: 78901</span>
+  </header>
+
+  <div class="controls">
+    <input type="text" id="rpc-url" value="http://localhost:8545" placeholder="Private RPC Endpoint...">
+    <button onclick="connectRPC()">CONNECT</button>
+  </div>
+
+  <div class="grid">
+    <!-- Block list -->
+    <div class="card">
+      <div class="card-title">RECENT BLOCKS</div>
+      <table>
+        <thead>
+          <tr>
+            <th>BLOCK</th>
+            <th>HASH</th>
+            <th>TXS</th>
+            <th>GAS USED</th>
+            <th>TIMESTAMP</th>
+          </tr>
+        </thead>
+        <tbody id="block-list">
+          <tr>
+            <td colspan="5" class="text-muted">Not connected. Input RPC URL and click CONNECT.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Node Info -->
+    <div class="card">
+      <div class="card-title">METRICS / STATUS</div>
+      <div style="margin-bottom: 15px;">
+        <div style="color: var(--text-muted); font-size: 11px;">CURRENT HEIGHT:</div>
+        <div id="latest-height" style="font-size: 24px; font-weight: bold;">#0</div>
+      </div>
+      <div style="margin-bottom: 15px;">
+        <div style="color: var(--text-muted); font-size: 11px;">PEERS:</div>
+        <div id="peer-count" style="font-size: 24px; font-weight: bold;">0</div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let provider;
+    
+    async function connectRPC() {
+      const url = document.getElementById("rpc-url").value;
+      const listElement = document.getElementById("block-list");
+      listElement.innerHTML = `<tr><td colspan="5" class="text-muted">Connecting to ${url}...</td></tr>`;
+      
+      try {
+        provider = new ethers.JsonRpcProvider(url);
+        const blockNumber = await provider.getBlockNumber();
+        document.getElementById("latest-height").innerText = `#${blockNumber}`;
+        
+        // Fetch peer count (via net_peerCount)
+        const peerHex = await provider.send("net_peerCount", []);
+        const peerCount = parseInt(peerHex, 16);
+        document.getElementById("peer-count").innerText = peerCount;
+
+        // Fetch recent 10 blocks
+        listElement.innerHTML = "";
+        const start = Math.max(0, blockNumber - 9);
+        for (let i = blockNumber; i >= start; i--) {
+          const block = await provider.getBlock(i);
+          if (!block) continue;
+          
+          const tr = document.createElement("tr");
+          const shortHash = block.hash.substring(0, 10) + "..." + block.hash.substring(block.hash.length - 8);
+          const time = new Date(block.timestamp * 1000).toLocaleTimeString();
+          
+          tr.innerHTML = `
+            <td class="text-green">#${block.number}</td>
+            <td class="text-muted" title="${block.hash}">${shortHash}</td>
+            <td>${block.transactions.length}</td>
+            <td>${block.gasUsed.toString()}</td>
+            <td class="text-muted">${time}</td>
+          `;
+          listElement.appendChild(tr);
+        }
+      } catch (err) {
+        listElement.innerHTML = `<tr><td colspan="5" style="color: #ef4444;">Failed to connect: ${err.message}</td></tr>`;
+      }
+    }
+  </script>
+</body>
+</html>

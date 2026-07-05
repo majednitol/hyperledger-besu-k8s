@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NOC - Route Origin Ledger Control Panel</title>
+  <link rel="stylesheet" href="./style.css">
+  <!-- Ethers.js library for Web3 connectivity -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/6.11.1/ethers.umd.min.js"></script>
+</head>
+<body>
+  <div class="noc-wrapper">
+    <!-- Header -->
+    <header class="noc-header">
+      <div class="header-logo">
+        <span class="indicator blink"></span>
+        <span class="brand-text">NOC // LEDGER CONTROL PANEL</span>
+      </div>
+      <div class="network-status-bar">
+        <span class="status-item">CHAIN_ID: <span class="val text-green" id="chain-id-label">N/A</span></span>
+        <span class="status-item">SYNC: <span class="val text-amber" id="sync-status">DISCONNECTED</span></span>
+      </div>
+    </header>
+
+    <!-- Grid Layout -->
+    <main class="noc-grid">
+      <!-- Left Column: Operations & Status -->
+      <section class="grid-card col-left">
+        <div class="card-header">RIR SUBMISSION GATEWAY</div>
+        <div class="card-body">
+          <form id="submission-form">
+            <div class="form-group">
+              <label for="rir-org-select">ORGANIZATION (RIR)</label>
+              <select id="rir-org-select" required>
+                <option value="afrinic">AFRINIC</option>
+                <option value="apnic">APNIC</option>
+                <option value="arin">ARIN</option>
+                <option value="ripencc">RIPE NCC</option>
+                <option value="lacnic">LACNIC</option>
+                <option value="rono">RONO</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="jwt-token">API CREDENTIALS (JWT SECRET)</label>
+              <input type="password" id="jwt-token" placeholder="Enter auth token..." required>
+            </div>
+            <div class="form-group">
+              <label for="prefix-input">IP PREFIX</label>
+              <input type="text" id="prefix-input" placeholder="e.g. 192.0.2.0/24" required>
+            </div>
+            <div class="form-group">
+              <label for="asn-input">AUTONOMOUS SYSTEM NUMBER (ASN)</label>
+              <input type="number" id="asn-input" placeholder="e.g. 65536" required>
+            </div>
+            <button type="submit" class="noc-btn">TRANSMIT TRANSACTION</button>
+          </form>
+          <div id="submission-response" class="response-box hidden"></div>
+        </div>
+      </section>
+
+      <!-- Right Column: State & Monitoring -->
+      <section class="grid-card col-right">
+        <div class="card-header">BRIDGE ANCHOR SYNCHRONIZATION</div>
+        <div class="card-body anchor-monitoring">
+          <div class="monitor-row">
+            <span class="label">PUBLIC ROOT:</span>
+            <span class="value text-mono text-green" id="public-root">0x0000000000000000000000000000000000000000000000000000000000000000</span>
+          </div>
+          <div class="monitor-row">
+            <span class="label">LAST ANCHORED PRIVATE BLOCK:</span>
+            <span class="value text-mono" id="anchored-block">#0</span>
+          </div>
+          <div class="monitor-row">
+            <span class="label">LAST ANCHORED TIME:</span>
+            <span class="value text-mono" id="anchored-time">N/A</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- Full Width: Ledger Entries -->
+      <section class="grid-card col-full">
+        <div class="card-header">RIR PREFIX ALLOCATIONS REGISTRY</div>
+        <div class="card-body">
+          <table class="noc-table">
+            <thead>
+              <tr>
+                <th>PREFIX</th>
+                <th>ASN</th>
+                <th>ORIGINATING RIR</th>
+                <th>STATUS</th>
+                <th>SUBMITTED AT</th>
+                <th>KEY PROOF</th>
+              </tr>
+            </thead>
+            <tbody id="registry-table-body">
+              <tr>
+                <td colspan="6" class="text-center text-muted">No records found. Connecting to registry...</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- Full Width: Log Console -->
+      <section class="grid-card col-full">
+        <div class="card-header">SYSTEM LOGS</div>
+        <div class="card-body console-wrapper">
+          <div class="console-log" id="console-log">
+            <div>&gt; NOC Console initialized. Connecting to RPC node...</div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <!-- Footer -->
+    <footer class="noc-footer">
+      <span>HYPERLEDGER BESU DUAL-NETWORK INTEGRITY MANAGER // V1.0</span>
+      <span id="block-height-label">BLOCK: #0</span>
+    </footer>
+  </div>
+  <script src="./app.js"></script>
+</body>
+</html>

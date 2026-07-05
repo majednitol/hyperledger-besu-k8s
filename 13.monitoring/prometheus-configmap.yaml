@@ -1,0 +1,81 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: prometheus-config
+  namespace: besu-app
+data:
+  prometheus.yml: |
+    global:
+      scrape_interval: 10s
+      evaluation_interval: 10s
+
+    rule_files:
+      - "/etc/prometheus/alert.rules"
+
+    alerting:
+      alertmanagers:
+        - static_configs:
+            - targets:
+                - "alertmanager:9093"
+
+    scrape_configs:
+      - job_name: "private-validators"
+        static_configs:
+          - targets:
+              - "private-validator-1.private-validator-1.besu-private.svc.cluster.local:9545"
+              - "private-validator-2.private-validator-2.besu-private.svc.cluster.local:9545"
+              - "private-validator-3.private-validator-3.besu-private.svc.cluster.local:9545"
+              - "private-validator-4.private-validator-4.besu-private.svc.cluster.local:9545"
+              - "private-validator-5.private-validator-5.besu-private.svc.cluster.local:9545"
+              - "private-validator-6.private-validator-6.besu-private.svc.cluster.local:9545"
+              - "validator-rono-2-0.validator-rono-2.besu-private.svc.cluster.local:9545"
+
+      - job_name: "private-rpc"
+        static_configs:
+          - targets:
+              - "rpc-rono.besu-private.svc.cluster.local:9545"
+
+      - job_name: "public-validators"
+        static_configs:
+          - targets:
+              - "public-validator-1.public-validator-1.besu-public.svc.cluster.local:9545"
+              - "public-validator-2.public-validator-2.besu-public.svc.cluster.local:9545"
+              - "public-validator-3.public-validator-3.besu-public.svc.cluster.local:9545"
+              - "public-validator-4.public-validator-4.besu-public.svc.cluster.local:9545"
+              - "public-validator-5.public-validator-5.besu-public.svc.cluster.local:9545"
+
+      - job_name: "public-rpc"
+        static_configs:
+          - targets:
+              - "public-rpc.besu-public.svc.cluster.local:9545"
+
+  alert.rules: |
+    groups:
+      - name: besu-alerts
+        rules:
+          - alert: BesuNodeDown
+            expr: up == 0
+            for: 1m
+            labels:
+              severity: critical
+            annotations:
+              summary: "Besu node down"
+              description: "A Hyperledger Besu validator or RPC pod has been unreachable for more than 1 minute."
+
+          - alert: BesuBlockDrift
+            expr: time() - besu_blockchain_block_number_timestamp > 15
+            for: 30s
+            labels:
+              severity: warning
+            annotations:
+              summary: "Block production halted"
+              description: "Block production has stopped. The latest block is older than 15 seconds."
+
+          - alert: BesuRoundChangeSpike
+            expr: rate(besu_consensus_round_change_total[2m]) > 0.1
+            for: 1m
+            labels:
+              severity: warning
+            annotations:
+              summary: "Consensus round change spike"
+              description: "Frequent QBFT round changes detected. Validators may be failing to agree on consensus."

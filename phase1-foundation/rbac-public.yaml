@@ -1,0 +1,77 @@
+# RBAC: Public Network Operator
+# Scope: besu-public namespace only
+# Principals: public-ops group
+#
+# Manages the public open Besu network — validators, bootnodes, RPC nodes,
+# and the internet-facing Ingress. Slightly more permissive than private-network-operator
+# because the public network has autoscaling and ingress resources to monitor.
+
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: public-network-operator
+  namespace: besu-public
+rules:
+  # StatefulSets and Deployments — manage validators, bootnodes, RPC nodes
+  - apiGroups: ["apps"]
+    resources: ["statefulsets", "deployments"]
+    verbs: ["get", "list", "watch", "update", "patch"]
+
+  # Pods — view and troubleshoot
+  - apiGroups: [""]
+    resources: ["pods", "pods/log"]
+    verbs: ["get", "list", "watch"]
+
+  # Services — view network topology (includes LoadBalancer for bootnode)
+  - apiGroups: [""]
+    resources: ["services", "endpoints"]
+    verbs: ["get", "list", "watch"]
+
+  # ConfigMaps — view genesis, static-nodes config
+  - apiGroups: [""]
+    resources: ["configmaps"]
+    verbs: ["get", "list", "watch"]
+
+  # Secrets — read-only
+  - apiGroups: [""]
+    resources: ["secrets"]
+    verbs: ["get"]
+
+  # HPA — view autoscaling state for public RPC nodes
+  - apiGroups: ["autoscaling"]
+    resources: ["horizontalpodautoscalers"]
+    verbs: ["get", "list", "watch"]
+
+  # Ingress — view public-facing routing
+  - apiGroups: ["networking.k8s.io"]
+    resources: ["ingresses"]
+    verbs: ["get", "list", "watch"]
+
+  # NetworkPolicies — view isolation rules
+  - apiGroups: ["networking.k8s.io"]
+    resources: ["networkpolicies"]
+    verbs: ["get", "list", "watch"]
+
+  # PodDisruptionBudgets — view
+  - apiGroups: ["policy"]
+    resources: ["poddisruptionbudgets"]
+    verbs: ["get", "list", "watch"]
+
+  # Certificates — view TLS cert status
+  - apiGroups: ["cert-manager.io"]
+    resources: ["certificates", "clusterissuers"]
+    verbs: ["get", "list", "watch"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: public-network-operator-binding
+  namespace: besu-public
+subjects:
+  - kind: Group
+    name: public-ops
+    apiGroup: rbac.authorization.k8s.io
+roleRef:
+  kind: Role
+  name: public-network-operator
+  apiGroup: rbac.authorization.k8s.io

@@ -1,0 +1,100 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: qbft-config-public
+  namespace: besu-public
+data:
+  qbftConfigFile.json: |
+    {
+      "genesis": {
+        "config": {
+          "chainId": 78902,
+          "londonBlock": 0,
+          "shanghaiTime": 0,
+          "qbft": {
+            "blockperiodseconds": 5,
+            "epochlength": 30000,
+            "requesttimeoutseconds": 10,
+            "emptyblockperiodseconds": 60
+          }
+        },
+        "nonce": "0x0",
+        "timestamp": "0x0",
+        "gasLimit": "0x2FAF080",
+        "difficulty": "0x1",
+        "coinbase": "0x0000000000000000000000000000000000000000",
+        "alloc": {}
+      },
+      "blockchain": { "nodes": { "generate": true, "count": 5 } }
+    }
+  generate.sh: |
+    #!/bin/sh
+    set -eu
+    echo "Generating validator configs (5 nodes)..."
+    rm -rf /out/validators /out/non-validators
+    mkdir -p /out/validators
+    besu operator generate-blockchain-config \
+      --config-file=/config/qbftConfigFile.json \
+      --to=/out/validators \
+      --private-key-file-name=key
+
+    echo "Generating non-validator keys (2 bootnodes)..."
+    mkdir -p /out/non-validators
+    cat <<EOF > /tmp/non-validators-config.json
+    {
+      "genesis": {
+        "config": {
+          "chainId": 78902,
+          "qbft": {
+            "blockperiodseconds": 5
+          }
+        }
+      },
+      "blockchain": { "nodes": { "generate": true, "count": 2 } }
+    }
+    EOF
+    besu operator generate-blockchain-config \
+      --config-file=/tmp/non-validators-config.json \
+      --to=/out/non-validators \
+      --private-key-file-name=key
+    echo "Generation complete!"
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: generate-public-genesis
+  namespace: besu-public
+spec:
+  restartPolicy: Never
+  backoffLimit: 3
+  template:
+    spec:
+      restartPolicy: Never
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        fsGroup: 1000
+      containers:
+        - name: generate-genesis
+          image: hyperledger/besu:24.12.2
+          command:
+            - /bin/sh
+            - /config/generate.sh
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+            readOnlyRootFilesystem: false
+          volumeMounts:
+            - name: config
+              mountPath: /config
+            - name: out
+              mountPath: /out
+      volumes:
+        - name: config
+          configMap:
+            name: qbft-config-public
+        - name: out
+          persistentVolumeClaim:
+            claimName: public-genesis-output-pvc

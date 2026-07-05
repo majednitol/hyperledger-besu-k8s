@@ -1,0 +1,274 @@
+/* CSS Design System for Industrial Utilitarian NOC Dashboard */
+:root {
+  --bg-deep: #0B0F19;
+  --bg-card: #0F172A;
+  --border-color: #1E293B;
+  --font-color: #E2E8F0;
+  --font-muted: #64748B;
+  
+  --color-green: #10B981;
+  --color-amber: #F59E0B;
+  --color-red: #EF4444;
+  --color-blue: #3B82F6;
+  
+  --font-mono: 'Consolas', 'Courier New', Courier, monospace;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  background-color: var(--bg-deep);
+  color: var(--font-color);
+  font-family: var(--font-mono);
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.noc-wrapper {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+}
+
+/* Header */
+.noc-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 15px 25px;
+  border-bottom: 2px solid var(--border-color);
+  background-color: #020617;
+}
+
+.header-logo {
+  display: flex;
+  align-items: center;
+}
+
+.indicator {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background-color: var(--color-green);
+  margin-right: 12px;
+}
+
+.blink {
+  animation: pulse 1.5s infinite;
+}
+
+@keyframes pulse {
+  0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7); }
+  70% { transform: scale(1); box-shadow: 0 0 0 8px rgba(16, 185, 129, 0); }
+  100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+}
+
+.brand-text {
+  font-weight: bold;
+  letter-spacing: 1px;
+}
+
+.network-status-bar {
+  display: flex;
+  gap: 20px;
+}
+
+.status-item {
+  color: var(--font-muted);
+}
+
+.status-item .val {
+  font-weight: bold;
+}
+
+/* Grid Layout */
+.noc-grid {
+  display: grid;
+  grid-template-columns: repeat(12, 1fr);
+  gap: 20px;
+  padding: 25px;
+  flex: 1;
+  overflow-y: auto;
+}
+
+.grid-card {
+  grid-column: span 12;
+  background-color: var(--bg-card);
+  border: 1px solid var(--border-color);
+  display: flex;
+  flex-direction: column;
+}
+
+.col-left {
+  grid-column: span 6;
+}
+
+.col-right {
+  grid-column: span 6;
+}
+
+.col-full {
+  grid-column: span 12;
+}
+
+.card-header {
+  padding: 10px 15px;
+  font-weight: bold;
+  background-color: #1E293B;
+  border-bottom: 1px solid var(--border-color);
+  font-size: 12px;
+  letter-spacing: 1px;
+  color: #94A3B8;
+}
+
+.card-body {
+  padding: 20px;
+  flex: 1;
+}
+
+/* Forms */
+.form-group {
+  margin-bottom: 15px;
+}
+
+label {
+  display: block;
+  font-size: 11px;
+  color: var(--font-muted);
+  margin-bottom: 5px;
+}
+
+input, select {
+  width: 100%;
+  padding: 8px 12px;
+  background-color: #020617;
+  border: 1px solid var(--border-color);
+  color: var(--font-color);
+  font-family: var(--font-mono);
+}
+
+input:focus, select:focus {
+  outline: 1px solid var(--color-green);
+}
+
+.noc-btn {
+  width: 100%;
+  padding: 10px;
+  background-color: transparent;
+  border: 1px solid var(--color-green);
+  color: var(--color-green);
+  font-family: var(--font-mono);
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.noc-btn:hover {
+  background-color: var(--color-green);
+  color: #000;
+}
+
+.response-box {
+  margin-top: 15px;
+  padding: 10px;
+  background-color: #020617;
+  border: 1px solid var(--border-color);
+  font-size: 12px;
+}
+
+.hidden {
+  display: none;
+}
+
+/* Anchor stats */
+.anchor-monitoring {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  justify-content: center;
+}
+
+.monitor-row {
+  display: flex;
+  justify-content: space-between;
+  border-bottom: 1px solid #1E293B;
+  padding-bottom: 8px;
+}
+
+.monitor-row .label {
+  color: var(--font-muted);
+}
+
+/* Table */
+.noc-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.noc-table th, .noc-table td {
+  padding: 10px 15px;
+  text-align: left;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.noc-table th {
+  font-size: 11px;
+  color: var(--font-muted);
+  font-weight: normal;
+  background-color: #020617;
+}
+
+.noc-table tbody tr:hover {
+  background-color: #1E293B;
+}
+
+/* Badges */
+.status-badge {
+  padding: 2px 8px;
+  font-size: 10px;
+  font-weight: bold;
+}
+
+.status-pending { background-color: rgba(245, 158, 11, 0.1); color: var(--color-amber); border: 1px solid var(--color-amber); }
+.status-validated { background-color: rgba(16, 185, 129, 0.1); color: var(--color-green); border: 1px solid var(--color-green); }
+.status-revoked { background-color: rgba(239, 68, 68, 0.1); color: var(--color-red); border: 1px solid var(--color-red); }
+
+/* Console Logs */
+.console-wrapper {
+  background-color: #020617;
+  border: 1px solid var(--border-color);
+  padding: 15px !important;
+}
+
+.console-log {
+  height: 120px;
+  overflow-y: auto;
+  font-size: 12px;
+  color: #94A3B8;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+/* Utilities */
+.text-green { color: var(--color-green); }
+.text-amber { color: var(--color-amber); }
+.text-red { color: var(--color-red); }
+.text-mono { font-family: var(--font-mono); }
+.text-muted { color: var(--font-muted); }
+.text-center { text-align: center; }
+
+/* Footer */
+.noc-footer {
+  padding: 10px 25px;
+  border-top: 1px solid var(--border-color);
+  background-color: #020617;
+  display: flex;
+  justify-content: space-between;
+  color: var(--font-muted);
+  font-size: 11px;
+}

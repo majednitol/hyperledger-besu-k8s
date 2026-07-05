@@ -1,0 +1,15 @@
+{
+  "name": "besu-bridge-contracts",
+  "version": "1.0.0",
+  "description": "Smart contracts for the ledger bridge RegistryAnchor",
+  "main": "index.js",
+  "scripts": {
+    "compile": "hardhat compile",
+    "deploy:local": "hardhat run scripts/deploy.js --network localhost",
+    "deploy:public": "hardhat run scripts/deploy.js --network besuPublic"
+  },
+  "devDependencies": {
+    "@nomicfoundation/hardhat-toolbox": "^5.0.0",
+    "hardhat": "^2.22.2"
+  }
+}

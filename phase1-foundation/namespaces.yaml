@@ -1,0 +1,51 @@
+# Three namespaces with restricted Pod Security Admission enforcement.
+# This is the cluster-level enforcement that prevents any pod from running
+# without runAsNonRoot, dropped capabilities, and other hardening settings.
+#
+# Apply with: kubectl apply -f namespaces.yaml
+# Verify with: kubectl get ns --show-labels | grep pod-security
+
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: besu-private
+  labels:
+    pod-security.kubernetes.io/enforce: restricted
+    pod-security.kubernetes.io/enforce-version: latest
+    pod-security.kubernetes.io/warn: restricted
+    pod-security.kubernetes.io/warn-version: latest
+    pod-security.kubernetes.io/audit: restricted
+    pod-security.kubernetes.io/audit-version: latest
+    kubernetes.io/metadata.name: besu-private
+  annotations:
+    description: "Private permissioned Besu network — RIR consortium ledger for BGP route-origin validation"
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: besu-public
+  labels:
+    pod-security.kubernetes.io/enforce: restricted
+    pod-security.kubernetes.io/enforce-version: latest
+    pod-security.kubernetes.io/warn: restricted
+    pod-security.kubernetes.io/warn-version: latest
+    pod-security.kubernetes.io/audit: restricted
+    pod-security.kubernetes.io/audit-version: latest
+    kubernetes.io/metadata.name: besu-public
+  annotations:
+    description: "Public open Besu network — transparency/verification ledger with anchor records"
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: besu-app
+  labels:
+    pod-security.kubernetes.io/enforce: restricted
+    pod-security.kubernetes.io/enforce-version: latest
+    pod-security.kubernetes.io/warn: restricted
+    pod-security.kubernetes.io/warn-version: latest
+    pod-security.kubernetes.io/audit: restricted
+    pod-security.kubernetes.io/audit-version: latest
+    kubernetes.io/metadata.name: besu-app
+  annotations:
+    description: "Application layer — API, UI, bridge anchor-service, monitoring"

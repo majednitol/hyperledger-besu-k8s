@@ -1,0 +1,40 @@
+# Ingress routing configuration for the Besu Public Network.
+# Terminates TLS at the edge using Let's Encrypt production certificates,
+# and enforces a rate limit of 20 requests-per-second (RPS) per IP.
+
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: public-network-ingress
+  namespace: besu-public
+  annotations:
+    kubernetes.io/ingress.class: "nginx"
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"
+    nginx.ingress.kubernetes.io/limit-rps: "20"
+spec:
+  tls:
+    - hosts:
+        - rpc.public.yourdomain.com
+        - explorer.public.yourdomain.com
+      secretName: public-tls-cert
+  rules:
+    - host: rpc.public.yourdomain.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: public-rpc
+                port:
+                  number: 8545
+    - host: explorer.public.yourdomain.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: explorer-public
+                port:
+                  number: 80

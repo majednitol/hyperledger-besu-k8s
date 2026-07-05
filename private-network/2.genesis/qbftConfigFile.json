@@ -1,0 +1,36 @@
+{
+  "genesis": {
+    "config": {
+      "chainId": 78901,
+      "londonBlock": 0,
+      "shanghaiTime": 0,
+      "qbft": {
+        "blockperiodseconds": 5,
+        "epochlength": 30000,
+        "requesttimeoutseconds": 10,
+        "emptyblockperiodseconds": 60
+      }
+    },
+    "nonce": "0x0",
+    "timestamp": "0x0",
+    "gasLimit": "0x1C9C380",
+    "difficulty": "0x1",
+    "coinbase": "0x0000000000000000000000000000000000000000",
+    "alloc": {
+      "0000000000000000000000000000000000009999": {
+        "balance": "0",
+        "comment": "NodeIngress permissioning contract address"
+      },
+      "0000000000000000000000000000000000008888": {
+        "balance": "0",
+        "comment": "AccountIngress permissioning contract address"
+      }
+    }
+  },
+  "blockchain": {
+    "nodes": {
+      "generate": true,
+      "count": 7
+    }
+  }
+}

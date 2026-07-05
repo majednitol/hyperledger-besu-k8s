@@ -1,0 +1,17 @@
+# PersistentVolumeClaim for public network genesis generation.
+# Validator data PVCs are created dynamically by the validator StatefulSets (Phase 6).
+# This claim holds the outputs of the public genesis configuration generator (keys + genesis.json).
+
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: public-genesis-output-pvc
+  namespace: besu-public
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+  # Leave storageClassName empty to use default StorageClass.
+  # storageClassName: gp3

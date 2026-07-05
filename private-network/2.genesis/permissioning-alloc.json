@@ -1,0 +1,13 @@
+{
+  "contractAddresses": {
+    "NodeIngress": {
+      "address": "0x0000000000000000000000000000000000009999",
+      "purpose": "Decides whether a node is allowed to peer/connect to the private network. Evaluates NodeRules ruleset."
+    },
+    "AccountIngress": {
+      "address": "0x0000000000000000000000000000000000008888",
+      "purpose": "Decides whether an Ethereum account is authorized to send transactions. Evaluates AccountRules ruleset."
+    }
+  },
+  "instruction": "These addresses are reserved in genesis config and allocated with empty balance so they can be replaced by actual contract deployments during Phase 4 without modifying genesis block hash."
+}
