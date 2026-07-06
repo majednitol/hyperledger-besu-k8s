@@ -25,6 +25,14 @@ async function main() {
   console.log("\nRegistering test prefixes...");
   let tx;
 
+  tx = await registry.registerPrefix("10.0.0.0/8", "ARIN");
+  await tx.wait();
+  console.log("  ✓ Registered 10.0.0.0/8 (ARIN)");
+
+  tx = await registry.registerPrefix("172.16.0.0/12", "RIPENCC");
+  await tx.wait();
+  console.log("  ✓ Registered 172.16.0.0/12 (RIPENCC)");
+
   tx = await registry.registerPrefix("192.168.0.0/16", "APNIC");
   await tx.wait();
   console.log("  ✓ Registered 192.168.0.0/16 (APNIC)");
@@ -32,6 +40,10 @@ async function main() {
   tx = await registry.registerPrefix("41.0.0.0/8", "AFRINIC");
   await tx.wait();
   console.log("  ✓ Registered 41.0.0.0/8 (AFRINIC)");
+
+  tx = await registry.registerPrefix("200.0.0.0/7", "LACNIC");
+  await tx.wait();
+  console.log("  ✓ Registered 200.0.0.0/7 (LACNIC)");
 
   // Read back the data
   console.log("\nVerifying stored data...");

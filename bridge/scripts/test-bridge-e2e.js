@@ -68,8 +68,11 @@ async function main() {
   // 4. Register test prefixes on PRIVATE
   console.log("\n[4/6] Registering IP prefixes on PRIVATE chain...");
   const testPrefixes = [
+    { cidr: "10.0.0.0/8",     rir: "ARIN" },
+    { cidr: "172.16.0.0/12",  rir: "RIPENCC" },
     { cidr: "192.168.0.0/16", rir: "APNIC" },
     { cidr: "41.0.0.0/8",     rir: "AFRINIC" },
+    { cidr: "200.0.0.0/7",    rir: "LACNIC" },
   ];
 
   for (const p of testPrefixes) {

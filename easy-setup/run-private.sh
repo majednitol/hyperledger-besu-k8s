@@ -25,7 +25,17 @@ fi
 kubectl apply -n "$PRIVATE_NAMESPACE" -f "${SCRIPT_DIR}/../private-network/1.storage/pvc.yaml"
 
 echo "Step 2/6: Genesis generation..."
-kubectl apply -n "$PRIVATE_NAMESPACE" -f "${SCRIPT_DIR}/../private-network/2.genesis/generate-genesis-job.yaml"
+VAL_COUNT=${#VAL_NAMES[@]}
+NON_VAL_COUNT=$(( ${#RPC_NAMES[@]} + 2 ))
+echo "  Configuring genesis generation job: validators=${VAL_COUNT}, non-validators=${NON_VAL_COUNT}"
+
+sed -e "s/\"count\": 7/\"count\": ${VAL_COUNT}/g" \
+    -e "s/\"count\": 8/\"count\": ${NON_VAL_COUNT}/g" \
+    -e "s/(7 nodes)/(${VAL_COUNT} nodes)/g" \
+    -e "s/(8 nodes)/(${NON_VAL_COUNT} nodes)/g" \
+    "${SCRIPT_DIR}/../private-network/2.genesis/generate-genesis-job.yaml" > /tmp/generate-genesis-job-substituted.yaml
+
+kubectl apply -n "$PRIVATE_NAMESPACE" -f /tmp/generate-genesis-job-substituted.yaml
 
 echo "   Waiting for generate-genesis Job to complete..."
 kubectl wait --for=condition=complete job/generate-genesis -n "$PRIVATE_NAMESPACE" --timeout=120s

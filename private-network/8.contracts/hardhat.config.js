@@ -20,12 +20,11 @@ module.exports = {
       gasPrice: 0
     },
     besuPrivate: {
-      url: "http://rpc-rono.besu-private.svc.cluster.local:8545",
-      // Set a high gas limit suitable for our private network limits
+      url: process.env.PRIVATE_RPC_URL || "http://127.0.0.1:18545",
       gas: 15000000,
-      gasPrice: 0, // QBFT handles gas but standard transaction validation may require gasPrice: 0 or low value
-      // Explicitly specify private key for deployer (pre-funded in genesis)
-      // accounts: ["0x..."] 
+      gasPrice: 0,
+      accounts: ["0x5f781a4e2b528b52ce168d629f4818b5a657486f37b171955646afaf7ef8213a"],
+      timeout: 120000
     }
   }
 };

@@ -12,7 +12,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source "${SCRIPT_DIR}/../../config.env"
 
 NAMESPACE="${PRIVATE_NAMESPACE}"
-RPC_ORGS=("afrinic" "apnic" "rono")
+RPC_ORGS=("${RPC_NAMES[@]}")
 
 echo "Deploying ${#RPC_ORGS[@]} private RPC nodes..."
 
@@ -86,6 +86,7 @@ spec:
             - --metrics-enabled=true
             - --metrics-port=9545
             - --metrics-host=0.0.0.0
+            - --sync-min-peers=2
           securityContext:
             allowPrivilegeEscalation: false
             capabilities:

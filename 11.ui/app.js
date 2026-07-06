@@ -19,10 +19,10 @@ function logMsg(msg, type = "info") {
   logConsole.scrollTop = logConsole.scrollHeight;
 }
 
-// Fetch RIR prefix records from the API Gateway
+// Fetch Healthcare records from the API Gateway
 async function fetchRegistry() {
   try {
-    const res = await fetch(`${API_BASE}/prefixes?limit=50`);
+    const res = await fetch(`${API_BASE}/records?limit=50`);
     if (!res.ok) throw new Error(`HTTP error ${res.status}`);
     const data = await res.json();
     
@@ -31,39 +31,30 @@ async function fetchRegistry() {
 
     registryTableBody.innerHTML = "";
     if (!data.records || data.records.length === 0) {
-      registryTableBody.innerHTML = `<tr><td colspan="6" class="text-center text-muted">No records found. Registry is empty.</td></tr>`;
+      registryTableBody.innerHTML = `<tr><td colspan="6" class="text-center text-muted">No medical records found. Registry is empty.</td></tr>`;
       return;
     }
 
     data.records.forEach(rec => {
       const tr = document.createElement("tr");
       
-      let statusLabel = "PENDING";
-      let statusClass = "status-pending";
-      if (rec.status === 1) {
-        statusLabel = "VALIDATED";
-        statusClass = "status-validated";
-      } else if (rec.status === 2) {
-        statusLabel = "REVOKED";
-        statusClass = "status-revoked";
-      }
-
       const date = new Date(rec.submittedAt * 1000).toLocaleString();
-      const shortKey = rec.key.substring(0, 10) + "..." + rec.key.substring(rec.key.length - 8);
+      const shortHash = rec.treatmentHash.substring(0, 12) + "...";
+      const shortDoctor = rec.doctor.substring(0, 10) + "...";
 
       tr.innerHTML = `
-        <td class="text-mono">${rec.prefix}</td>
-        <td class="text-mono">${rec.asn}</td>
-        <td class="text-mono">${rec.submittedBy.substring(0, 10)}...</td>
-        <td><span class="status-badge ${statusClass}">${statusLabel}</span></td>
+        <td class="text-mono">#${rec.key}</td>
+        <td class="text-mono">${rec.patientId}</td>
+        <td class="text-mono text-green">${rec.diagnosisCode}</td>
+        <td class="text-mono text-muted" title="${rec.treatmentHash}">${shortHash}</td>
+        <td class="text-mono text-muted" title="${rec.doctor}">${shortDoctor}</td>
         <td class="text-mono text-muted">${date}</td>
-        <td class="text-mono text-muted" title="${rec.key}">${shortKey}</td>
       `;
       registryTableBody.appendChild(tr);
     });
-    logMsg("Registry table updated successfully.", "success");
+    logMsg("Healthcare registry table updated successfully.", "success");
   } catch (err) {
-    logMsg(`Failed to query registry table: ${err.message}`, "error");
+    logMsg(`Failed to query healthcare registry: ${err.message}`, "error");
     document.getElementById("sync-status").innerText = "DISCONNECTED";
     document.getElementById("sync-status").className = "val text-red";
   }
@@ -76,6 +67,13 @@ async function fetchAnchor() {
     if (!res.ok) throw new Error(`HTTP error ${res.status}`);
     const data = await res.json();
 
+    if (data.total === 0) {
+      document.getElementById("public-root").innerText = "No anchors yet";
+      document.getElementById("anchored-block").innerText = "N/A";
+      document.getElementById("anchored-time").innerText = "N/A";
+      return;
+    }
+
     document.getElementById("public-root").innerText = data.merkleRoot;
     document.getElementById("anchored-block").innerText = `#${data.privateBlockNumber}`;
     document.getElementById("anchored-time").innerText = new Date(data.timestamp * 1000).toLocaleString();
@@ -85,26 +83,29 @@ async function fetchAnchor() {
   }
 }
 
-// Form Submission: Submit new prefix
+// Form Submission: Submit new medical record
 submissionForm.addEventListener("submit", async (e) => {
   e.preventDefault();
   
   const org = document.getElementById("rir-org-select").value;
   const token = document.getElementById("jwt-token").value;
-  const prefix = document.getElementById("prefix-input").value;
-  const asn = parseInt(document.getElementById("asn-input").value);
+  const diagnosisCode = document.getElementById("prefix-input").value;
+  const patientId = parseInt(document.getElementById("asn-input").value);
+  
+  // Simulate treatment plan hash (in real apps, this is patient data uploaded to IPFS/Secure store)
+  const treatmentHash = "0x" + ethers.keccak256(ethers.toUtf8Bytes(`treatment-plan-for-patient-${patientId}-${Date.now()}`)).substring(2);
 
-  logMsg(`Initiating transmission: prefix=${prefix} asn=${asn} org=${org}...`, "warning");
+  logMsg(`Registering medical record: patientId=${patientId} diagnosis=${diagnosisCode} role=${org}...`, "warning");
   submissionResponse.className = "response-box hidden";
   
   try {
-    const res = await fetch(`${API_BASE}/prefix`, {
+    const res = await fetch(`${API_BASE}/record`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
         "Authorization": `Bearer ${token}`
       },
-      body: JSON.stringify({ prefix, asn })
+      body: JSON.stringify({ patientId, diagnosisCode, treatmentHash })
     });
 
     const data = await res.json();
@@ -112,14 +113,14 @@ submissionForm.addEventListener("submit", async (e) => {
       throw new Error(data.error || `HTTP error ${res.status}`);
     }
 
-    logMsg(`Transaction confirmed! TxHash: ${data.txHash}`, "success");
-    submissionResponse.innerText = `Success! Transaction confirmed in block #${data.blockNumber}. TxHash: ${data.txHash}`;
+    logMsg(`Medical record registered! TxHash: ${data.txHash}`, "success");
+    submissionResponse.innerText = `Success! Record confirmed in block #${data.blockNumber}. TxHash: ${data.txHash}`;
     submissionResponse.className = "response-box text-green";
 
     // Refresh UI
     setTimeout(fetchRegistry, 2000);
   } catch (err) {
-    logMsg(`Transmission rejected: ${err.message}`, "error");
+    logMsg(`Registration rejected: ${err.message}`, "error");
     submissionResponse.innerText = `Error: ${err.message}`;
     submissionResponse.className = "response-box text-red";
   }

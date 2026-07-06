@@ -53,6 +53,7 @@ spec:
             - --metrics-enabled=true
             - --metrics-port=9545
             - --metrics-host=0.0.0.0
+            - --sync-min-peers=2
           securityContext:
             allowPrivilegeEscalation: false
             capabilities:

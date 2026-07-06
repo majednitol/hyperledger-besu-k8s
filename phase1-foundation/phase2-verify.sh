@@ -51,8 +51,8 @@ fi
 # ─── Check 2: Validator Secrets exist ───────────────────────────────────
 echo ""
 echo "━━━ [2/10] Node Key Secrets ━━━"
-VAL_NAMES=("afrinic" "apnic" "rono" "rono-2")
-RPC_NAMES=("afrinic" "apnic" "rono")
+VAL_NAMES=("afrinic" "apnic" "arin" "ripencc" "lacnic" "rono" "rono-2")
+RPC_NAMES=("afrinic" "apnic" "arin" "ripencc" "lacnic" "rono")
 ALL_SECRETS=()
 
 for ORG in "${VAL_NAMES[@]}"; do ALL_SECRETS+=("validator-${ORG}-key"); done

@@ -54,7 +54,7 @@ metadata:
     app: public-rpc
     network: public
 spec:
-  replicas: 3
+  replicas: 1
   selector:
     matchLabels:
       app: public-rpc
@@ -83,6 +83,8 @@ spec:
             - --rpc-http-cors-origins=*
             - --host-allowlist=*
             - --nat-method=NONE
+            - --logging=DEBUG
+            - --sync-min-peers=2
           securityContext:
             allowPrivilegeEscalation: false
             capabilities:

@@ -82,6 +82,63 @@ spec:
 apiVersion: v1
 kind: PersistentVolume
 metadata:
+  name: pv-private-val-arin
+spec:
+  capacity:
+    storage: 1Gi
+  volumeMode: Filesystem
+  accessModes:
+    - ReadWriteOnce
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: standard
+  hostPath:
+    path: /mnt/data/private-validator-arin
+    type: DirectoryOrCreate
+  claimRef:
+    namespace: besu-private
+    name: data-validator-arin-0
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: pv-private-val-ripencc
+spec:
+  capacity:
+    storage: 1Gi
+  volumeMode: Filesystem
+  accessModes:
+    - ReadWriteOnce
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: standard
+  hostPath:
+    path: /mnt/data/private-validator-ripencc
+    type: DirectoryOrCreate
+  claimRef:
+    namespace: besu-private
+    name: data-validator-ripencc-0
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: pv-private-val-lacnic
+spec:
+  capacity:
+    storage: 1Gi
+  volumeMode: Filesystem
+  accessModes:
+    - ReadWriteOnce
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: standard
+  hostPath:
+    path: /mnt/data/private-validator-lacnic
+    type: DirectoryOrCreate
+  claimRef:
+    namespace: besu-private
+    name: data-validator-lacnic-0
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
   name: pv-private-val-rono
 spec:
   capacity:

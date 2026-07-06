@@ -70,9 +70,8 @@ kubectl cp -n "${NAMESPACE}" genesis-extractor:/out "${TEMP_DIR}"
 echo "4. Tearing down helper pod..."
 kubectl delete pod genesis-extractor -n "${NAMESPACE}" --wait=false
 
-# Helper arrays/definitions
-VAL_NAMES=("afrinic" "apnic" "rono" "rono-2")
-RPC_NAMES=("afrinic" "apnic" "rono")
+# Helper arrays/definitions (now sourced from config.env)
+# VAL_NAMES and RPC_NAMES are loaded from config.env sourced above
 
 # Check we have the expected directories (fallback for different Besu versions)
 if [ -d "${TEMP_DIR}/validators/networkFiles/keys" ]; then
@@ -100,12 +99,15 @@ NON_VAL_KEYS=($(ls -d 0x* | sort))
 cd - >/dev/null
 
 echo "5. Verifying key counts..."
-if [ "${#VAL_KEYS[@]}" -ne 4 ]; then
-  echo "ERROR: Expected 4 validator keys, found ${#VAL_KEYS[@]}"
+EXPECTED_VAL_COUNT="${#VAL_NAMES[@]}"
+EXPECTED_NON_VAL_COUNT=$(( ${#RPC_NAMES[@]} + 2 ))
+
+if [ "${#VAL_KEYS[@]}" -ne "${EXPECTED_VAL_COUNT}" ]; then
+  echo "ERROR: Expected ${EXPECTED_VAL_COUNT} validator keys, found ${#VAL_KEYS[@]}"
   exit 1
 fi
-if [ "${#NON_VAL_KEYS[@]}" -ne 5 ]; then
-  echo "ERROR: Expected 5 non-validator keys (2 bootnodes + 3 RPCs), found ${#NON_VAL_KEYS[@]}"
+if [ "${#NON_VAL_KEYS[@]}" -ne "${EXPECTED_NON_VAL_COUNT}" ]; then
+  echo "ERROR: Expected ${EXPECTED_NON_VAL_COUNT} non-validator keys (2 bootnodes + ${#RPC_NAMES[@]} RPCs), found ${#NON_VAL_KEYS[@]}"
   exit 1
 fi
 
@@ -202,20 +204,12 @@ done
 # This ensures both files are bundled in the same ConfigMap.
 
 # 10. Generate static-nodes.json
-echo "10. Generating static-nodes.json..."
+# NOTE: Besu requires IP addresses in enode URLs, not DNS hostnames.
+# Since pod IPs are dynamic in Kubernetes, we use an empty static-nodes.json
+# and rely on --bootnodes (with ClusterIP-based enodes) for peer discovery.
+echo "10. Generating empty static-nodes.json (discovery via --bootnodes)..."
 STATIC_NODES_FILE="${TEMP_DIR}/static-nodes.json"
-echo "[" > "${STATIC_NODES_FILE}"
-# Include bootnodes and validators in static nodes
-FIRST=true
-for ENODE_URL in "${STATIC_ENODES[@]}"; do
-  if [ "$FIRST" = true ]; then
-    echo "  \"${ENODE_URL}\"" >> "${STATIC_NODES_FILE}"
-    FIRST=false
-  else
-    echo "  ,\"${ENODE_URL}\"" >> "${STATIC_NODES_FILE}"
-  fi
-done
-echo "]" >> "${STATIC_NODES_FILE}"
+echo "[]" > "${STATIC_NODES_FILE}"
 
 echo "10b. Creating combined genesis ConfigMap (genesis.json + static-nodes.json)..."
 kubectl create configmap besu-private-genesis \

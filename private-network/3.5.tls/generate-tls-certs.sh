@@ -13,8 +13,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source "${SCRIPT_DIR}/../../config.env"
 
 NAMESPACE="${PRIVATE_NAMESPACE}"
-VAL_NAMES=("afrinic" "apnic" "rono" "rono-2")
-RPC_NAMES=("afrinic" "apnic" "rono")
+# VAL_NAMES and RPC_NAMES are dynamically loaded from config.env sourced above
 
 echo "1. Creating keystore password secret..."
 PASSWORD="besusharedkeystorepassword123"

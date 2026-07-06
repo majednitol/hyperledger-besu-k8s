@@ -29,12 +29,12 @@ data:
           "0000000000000000000000000000000000008888": { "balance": "0", "comment": "AccountIngress permissioning contract" }
         }
       },
-      "blockchain": { "nodes": { "generate": true, "count": 4 } }
+      "blockchain": { "nodes": { "generate": true, "count": 7 } }
     }
   generate.sh: |
     #!/bin/sh
     set -eu
-    echo "Generating validator configs (4 nodes)..."
+    echo "Generating validator configs (7 nodes)..."
     rm -rf /out/validators /out/non-validators
     mkdir -p /out/validators
     besu operator generate-blockchain-config \
@@ -42,7 +42,7 @@ data:
       --to=/out/validators \
       --private-key-file-name=key
 
-    echo "Generating non-validator keys (5 nodes)..."
+    echo "Generating non-validator keys (8 nodes)..."
     mkdir -p /out/non-validators
     cat <<EOF > /tmp/non-validators-config.json
     {
@@ -54,7 +54,7 @@ data:
           }
         }
       },
-      "blockchain": { "nodes": { "generate": true, "count": 5 } }
+      "blockchain": { "nodes": { "generate": true, "count": 8 } }
     }
     EOF
     besu operator generate-blockchain-config \

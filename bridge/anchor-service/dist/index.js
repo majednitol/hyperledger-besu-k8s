@@ -43,7 +43,7 @@ const PUBLIC_ANCHOR_ADDRESS = process.env.PUBLIC_ANCHOR_ADDRESS;
 const RELAYER_KEY = process.env.RELAYER_KEY;
 const PRIVATE_REGISTRY_ABI = [
     "function recordCount() external view returns (uint256)",
-    "function getRecordsPage(uint256 offset, uint256 limit) external view returns (bytes32[] keys, tuple(string prefix, uint32 asn, address submittedBy, uint8 status, uint256 submittedAt, uint256 updatedAt)[] items)"
+    "function getRecordsPage(uint256 offset, uint256 limit) external view returns (uint256[] keys, tuple(uint256 patientId, string diagnosisCode, string treatmentHash, address doctor, uint256 submittedAt, bool active)[] items)"
 ];
 const PUBLIC_ANCHOR_ABI = [
     "function submitAnchor(bytes32 merkleRoot, uint256 privateBlockNumber) external",
@@ -87,7 +87,7 @@ async function main() {
     console.log(`Private RPC Endpoint: ${PRIVATE_RPC_URL}`);
     console.log(`Public RPC Endpoint: ${PUBLIC_RPC_URL}`);
     // 2. Fetch registry state from the private chain
-    console.log("Reading state from private PrefixRegistry...");
+    console.log("Reading state from private MedicalRecordRegistry...");
     const registryContract = new ethers_1.ethers.Contract(PRIVATE_REGISTRY_ADDRESS, PRIVATE_REGISTRY_ABI, privateProvider);
     const count = await registryContract.recordCount();
     const privateBlockNumber = await privateProvider.getBlockNumber();
@@ -98,12 +98,16 @@ async function main() {
         const [keys, items] = await registryContract.getRecordsPage(0, count);
         // Sort keys and items deterministically by the key value
         const sortedData = keys.map((key, idx) => ({
-            key,
-            status: items[idx].status
+            key: key.toString(),
+            patientId: items[idx].patientId.toString(),
+            diagnosisCode: items[idx].diagnosisCode,
+            treatmentHash: items[idx].treatmentHash,
+            doctor: items[idx].doctor,
+            active: items[idx].active
         })).sort((a, b) => a.key.localeCompare(b.key));
-        // Compute leaves: keccak256(key + status)
+        // Compute leaves: keccak256(patientId + diagnosisCode + treatmentHash + doctor + active)
         for (const data of sortedData) {
-            const leaf = ethers_1.ethers.solidityPackedKeccak256(["bytes32", "uint8"], [data.key, data.status]);
+            const leaf = ethers_1.ethers.solidityPackedKeccak256(["uint256", "string", "string", "address", "bool"], [data.patientId, data.diagnosisCode, data.treatmentHash, data.doctor, data.active]);
             leaves.push(leaf);
         }
     }
@@ -111,7 +115,7 @@ async function main() {
     const merkleRoot = computeMerkleRoot(leaves);
     console.log(`Computed Merkle Root: ${merkleRoot}`);
     // 4. Send Anchor transaction to the public chain
-    console.log("Submitting state anchor to public RegistryAnchor...");
+    console.log("Submitting state anchor to public MedicalRecordAnchor...");
     const anchorContract = new ethers_1.ethers.Contract(PUBLIC_ANCHOR_ADDRESS, PUBLIC_ANCHOR_ABI, relayerSigner);
     try {
         // Send transaction (gasPrice: 0 works for private/consortium chains config)

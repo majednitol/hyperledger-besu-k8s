@@ -72,6 +72,78 @@
       "artifacts": [
         "PrefixRegistry"
       ]
+    },
+    "/Users/majedurrahman/coding/hyperledger besu /besu-network/bridge/contracts/MedicalRecordAnchor.sol": {
+      "lastModificationDate": 1783313185183,
+      "contentHash": "f2538959c2917bbc1cf1280353d80804",
+      "sourceName": "contracts/MedicalRecordAnchor.sol",
+      "solcConfig": {
+        "version": "0.8.20",
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 200
+          },
+          "evmVersion": "paris",
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [],
+      "versionPragmas": [
+        "^0.8.20"
+      ],
+      "artifacts": [
+        "MedicalRecordAnchor"
+      ]
+    },
+    "/Users/majedurrahman/coding/hyperledger besu /besu-network/bridge/contracts/MedicalRecordRegistry.sol": {
+      "lastModificationDate": 1783313355628,
+      "contentHash": "df13b8e8f9bb21d58dd43b0624623d6c",
+      "sourceName": "contracts/MedicalRecordRegistry.sol",
+      "solcConfig": {
+        "version": "0.8.20",
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 200
+          },
+          "evmVersion": "paris",
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [],
+      "versionPragmas": [
+        "^0.8.20"
+      ],
+      "artifacts": [
+        "MedicalRecordRegistry"
+      ]
     }
   }
 }

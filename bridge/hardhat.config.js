@@ -20,13 +20,15 @@ module.exports = {
       url: "http://127.0.0.1:18545",
       chainId: 78901,
       gasPrice: 0,
-      accounts: [DEPLOYER_KEY]
+      accounts: [DEPLOYER_KEY],
+      timeout: 120000
     },
     besuPublic: {
       url: "http://127.0.0.1:28545",
       chainId: 78902,
       gasPrice: 0,
-      accounts: [DEPLOYER_KEY]
+      accounts: [DEPLOYER_KEY],
+      timeout: 120000
     }
   }
 };

@@ -23,6 +23,8 @@ spec:
             runAsNonRoot: true
             runAsUser: 1000
             fsGroup: 1000
+            seccompProfile:
+              type: RuntimeDefault
           containers:
             - name: anchor-service
               image: localhost:5001/anchor-service:latest
@@ -35,7 +37,7 @@ spec:
                 readOnlyRootFilesystem: false
               env:
                 - name: PRIVATE_RPC_URL
-                  value: "http://rpc-rono.besu-private.svc.cluster.local:8545"
+                  value: "http://rpc-doctor.besu-private.svc.cluster.local:8545"
                 - name: PUBLIC_RPC_URL
                   value: "http://public-rpc.besu-public.svc.cluster.local:8545"
                 - name: PRIVATE_REGISTRY_ADDRESS
@@ -76,7 +78,7 @@ spec:
               kubernetes.io/metadata.name: besu-private
           podSelector:
             matchLabels:
-              app: rpc-rono
+              app: rpc-doctor
       ports:
         - protocol: TCP
           port: 8545

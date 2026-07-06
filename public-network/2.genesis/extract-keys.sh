@@ -166,19 +166,12 @@ echo "8. Creating genesis ConfigMap..."
 # Placeholder - the actual configmap creation happens after static-nodes generation.
 
 # 9. Generate static-nodes.json
-echo "9. Generating static-nodes.json..."
+# NOTE: Besu requires IP addresses in enode URLs, not DNS hostnames.
+# Since pod IPs are dynamic in Kubernetes, we use an empty static-nodes.json
+# and rely on --bootnodes (with ClusterIP-based enodes) for peer discovery.
+echo "9. Generating empty static-nodes.json (discovery via --bootnodes)..."
 STATIC_NODES_FILE="${TEMP_DIR}/static-nodes.json"
-echo "[" > "${STATIC_NODES_FILE}"
-FIRST=true
-for ENODE_URL in "${STATIC_ENODES[@]}"; do
-  if [ "$FIRST" = true ]; then
-    echo "  \"${ENODE_URL}\"" >> "${STATIC_NODES_FILE}"
-    FIRST=false
-  else
-    echo "  ,\"${ENODE_URL}\"" >> "${STATIC_NODES_FILE}"
-  fi
-done
-echo "]" >> "${STATIC_NODES_FILE}"
+echo "[]" > "${STATIC_NODES_FILE}"
 
 kubectl create configmap besu-public-genesis \
   --from-file=genesis.json="${GENESIS_PATH}" \

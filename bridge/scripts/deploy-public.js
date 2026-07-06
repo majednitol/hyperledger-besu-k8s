@@ -17,7 +17,7 @@ async function main() {
 
   // Deploy RegistryAnchor with deployer as the relayer
   const RegistryAnchor = await ethers.getContractFactory("RegistryAnchor");
-  const anchor = await RegistryAnchor.deploy(deployer.address);
+  const anchor = await RegistryAnchor.deploy(deployer.address, { gasLimit: 3000000 });
   await anchor.waitForDeployment();
   const anchorAddr = await anchor.getAddress();
   console.log("  RegistryAnchor deployed at:", anchorAddr);
@@ -25,13 +25,13 @@ async function main() {
   // Submit a test anchor (simulating a bridge relay)
   console.log("\nSubmitting test anchor (simulating bridge relay)...");
   const testRoot = ethers.keccak256(ethers.toUtf8Bytes("test-merkle-root-block-1"));
-  let tx = await anchor.submitAnchor(testRoot, 1);
+  let tx = await anchor.submitAnchor(testRoot, 1, { gasLimit: 150000 });
   await tx.wait();
   console.log("  ✓ Anchor 0 submitted: root =", testRoot);
 
   // Submit a second anchor
   const testRoot2 = ethers.keccak256(ethers.toUtf8Bytes("test-merkle-root-block-10"));
-  tx = await anchor.submitAnchor(testRoot2, 10);
+  tx = await anchor.submitAnchor(testRoot2, 10, { gasLimit: 150000 });
   await tx.wait();
   console.log("  ✓ Anchor 1 submitted: root =", testRoot2);
 

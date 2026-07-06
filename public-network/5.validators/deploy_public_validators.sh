@@ -83,6 +83,7 @@ spec:
             - --metrics-port=9545
             - --metrics-host=0.0.0.0
             - --nat-method=NONE
+            - --sync-min-peers=2
           securityContext:
             allowPrivilegeEscalation: false
             capabilities:
@@ -145,6 +146,28 @@ spec:
         - name: key
           secret:
             secretName: ${NAME}-key
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: ${NAME}
+spec:
+  clusterIP: None
+  selector:
+    app: ${NAME}
+  ports:
+    - name: p2p-tcp
+      port: 30303
+      targetPort: 30303
+      protocol: TCP
+    - name: p2p-udp
+      port: 30303
+      targetPort: 30303
+      protocol: UDP
+    - name: metrics
+      port: 9545
+      targetPort: 9545
+      protocol: TCP
 EOF
 done
 

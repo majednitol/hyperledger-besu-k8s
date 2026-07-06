@@ -1,0 +1,11 @@
+{
+  "timestamp": "2026-07-06T05:59:26.018Z",
+  "private": {
+    "chainId": 78901,
+    "MedicalRecordRegistry": "0x1858cCeC051049Fa1269E958da2d33bCA27c6Db8"
+  },
+  "public": {
+    "chainId": 78902,
+    "MedicalRecordAnchor": "0x4D2D24899c0B115a1fce8637FCa610Fe02f1909e"
+  }
+}

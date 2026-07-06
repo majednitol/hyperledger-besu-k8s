@@ -12,7 +12,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source "${SCRIPT_DIR}/../../config.env"
 
 NAMESPACE="${PRIVATE_NAMESPACE}"
-VAL_ORGS=("afrinic" "apnic" "rono" "rono-2")
+VAL_ORGS=("${VAL_NAMES[@]}")
 
 echo "Deploying ${#VAL_ORGS[@]} private validators..."
 
@@ -82,6 +82,7 @@ spec:
             - --metrics-port=9545
             - --metrics-host=0.0.0.0
             - --nat-method=NONE
+            - --sync-min-peers=2
           securityContext:
             allowPrivilegeEscalation: false
             capabilities:

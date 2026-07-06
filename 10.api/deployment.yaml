@@ -59,12 +59,12 @@ spec:
               value: "dev-rir-secret-key-123456789"
             - name: PUBLIC_RPC_URL
               value: "http://rpc-public.besu-public.svc.cluster.local:8545"
-            - name: RPC_AFRINIC_URL
-              value: "http://rpc-afrinic.besu-private.svc.cluster.local:8545"
-            - name: RPC_APNIC_URL
-              value: "http://rpc-afrinic.besu-private.svc.cluster.local:8545"
-            - name: RPC_RONO_URL
-              value: "http://rpc-afrinic.besu-private.svc.cluster.local:8545"
+            - name: ORG_NAMES
+              value: "doctor,patient"
+            - name: RPC_DOCTOR_URL
+              value: "http://rpc-doctor.besu-private.svc.cluster.local:8545"
+            - name: RPC_PATIENT_URL
+              value: "http://rpc-patient.besu-private.svc.cluster.local:8545"
 ---
 apiVersion: v1
 kind: Service
