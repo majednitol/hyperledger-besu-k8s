@@ -1,0 +1,94 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: blockscout-frontend
+  namespace: besu-app
+  labels:
+    app: blockscout-frontend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: blockscout-frontend
+  template:
+    metadata:
+      labels:
+        app: blockscout-frontend
+    spec:
+      securityContext:
+        fsGroup: 1001
+        runAsGroup: 1001
+        runAsNonRoot: true
+        runAsUser: 1001
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: frontend
+          image: ghcr.io/blockscout/frontend:latest
+          imagePullPolicy: Always
+          env:
+            - name: NEXT_PUBLIC_API_HOST
+              value: "localhost"
+            - name: NEXT_PUBLIC_API_PORT
+              value: "4000"
+            - name: NEXT_PUBLIC_API_PROTOCOL
+              value: "http"
+            - name: NEXT_PUBLIC_APP_HOST
+              value: "localhost"
+            - name: NEXT_PUBLIC_APP_PORT
+              value: "4001"
+            - name: NEXT_PUBLIC_APP_PROTOCOL
+              value: "http"
+            - name: NEXT_PUBLIC_NETWORK_NAME
+              value: "RIR Public"
+            - name: NEXT_PUBLIC_NETWORK_SHORT_NAME
+              value: "RIR"
+            - name: NEXT_PUBLIC_NETWORK_ID
+              value: "78902"
+            - name: NEXT_PUBLIC_IS_TESTNET
+              value: "true"
+            - name: NEXT_PUBLIC_API_BASE_PATH
+              value: "/"
+            - name: NEXT_PUBLIC_HOMEPAGE_CHARTS
+              value: '["daily_txs"]'
+            - name: NEXT_PUBLIC_STATS_API_HOST
+              value: ""
+            - name: HOSTNAME
+              value: "0.0.0.0"
+          ports:
+            - containerPort: 3000
+              name: http
+          resources:
+            limits:
+              cpu: "500m"
+              memory: "512Mi"
+            requests:
+              cpu: "100m"
+              memory: "256Mi"
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+            readOnlyRootFilesystem: false
+            seccompProfile:
+              type: RuntimeDefault
+          volumeMounts:
+            - mountPath: /app/public/assets/configs
+              name: configs-volume
+      volumes:
+        - name: configs-volume
+          emptyDir: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: blockscout-frontend
+  namespace: besu-app
+spec:
+  ports:
+    - port: 3000
+      targetPort: 3000
+      name: http
+  selector:
+    app: blockscout-frontend
