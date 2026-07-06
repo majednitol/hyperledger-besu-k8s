@@ -12,22 +12,24 @@ This document is compiled for the incoming AI agent or engineer to outline the c
 | **Public Chain** | **Working** | `public-rpc` (28545) | RegistryAnchor contract deployment |
 | **Bridge Daemon** | **Working** | `registry-anchor` (CronJob / Job) | Executed `test-bridge-job` successfully |
 | **API Gateway** | **Working** | `api-gateway` (3000) | Express backend log & static UI server |
-| **Blockscout UI** | **Mismatched** | `blockscout-frontend` (4001) | Browser verification (API endpoint errors) |
+| **Blockscout UI** | **Working** | `blockscout-frontend` (4001) | Browser verification (Dashboard showing blocks & txs) |
 
 ---
 
 ## 2. Deep Dive: Known Issues & Technical Constraints
 
-### 🔴 Issue 1: Blockscout Frontend Client-Side API Resolution
-* **Type**: Open Issue (Configuration Mismatch)
-* **Symptom**: Navigating to `http://localhost:4001` renders the Blockscout template, but displays **"undefined explorer"** and **"No data. Please reload the page."**.
-* **Root Cause**: Next.js bakes environment variables starting with `NEXT_PUBLIC_` into the static JavaScript bundle at compile time. The pre-built image `ghcr.io/blockscout/frontend:latest` was deployed with:
-  * `NEXT_PUBLIC_API_HOST=blockscout.besu-app.svc.cluster.local`
-  When accessed by a client web browser outside the Kubernetes cluster, the browser cannot resolve `blockscout.besu-app.svc.cluster.local`, causing all client-side network requests to fail.
-* **Workaround**: We have deployed static HTML/Ethers explorers served directly by the API Gateway. These bypass the Next.js bundle and fetch blocks locally:
-  * **Public Explorer**: `http://localhost:3000/explorer-public/` (Input `http://localhost:28545` as the RPC endpoint)
-  * **Private Explorer**: `http://localhost:3000/explorer-private/` (Input `http://localhost:18545` as the RPC endpoint)
-* **Action Item for Next Agent**: Either rebuild the `blockscout/frontend` image passing `NEXT_PUBLIC_API_HOST=localhost:4000` at build time, or configure Nginx Ingress in Minikube to route `/api` requests on the host domain.
+### 🟢 Issue 1: Blockscout Frontend Client-Side API Resolution
+* **Type**: **RESOLVED**
+* **Symptom**: Navigating to `http://localhost:4001` was showing **"undefined explorer"** and **"No data. Please reload the page."**.
+* **Root Cause**: The Next.js frontend uses a startup shell script `./make_envs_script.sh` to compile environment variables (like `NEXT_PUBLIC_API_HOST`) into `/app/public/assets/envs.js` at container boot. Because the Pod was configured to run as UID `10001` instead of `1001` (the owner of the NextJS folders in the container image), it encountered `Permission denied` when trying to create/write the `envs.js` config file and copy the favicon assets. As a result, the client-side environment was unpopulated, causing the API calls to fail.
+* **Resolution**: Created `14.blockscout/blockscout-frontend.yaml` defining the frontend deployment, and updated the Pod's `securityContext` to use UID/GID `1001`. This successfully granted permission for the env generation script to execute, resolving all permission errors and loading the block/transaction data correctly.
+* **Accessing Explorer**:
+  * Ensure backend and frontend port-forwards are running:
+    ```bash
+    kubectl port-forward svc/blockscout 4000:4000 -n besu-app
+    kubectl port-forward svc/blockscout-frontend 4001:3000 -n besu-app
+    ```
+  * Open `http://localhost:4001` in your browser.
 
 ### 🟡 Issue 2: Minikube API Server Saturated (TLS Handshake Timeouts)
 * **Type**: Open Constraint (Resource Limits)
