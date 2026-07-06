@@ -71,8 +71,8 @@ echo "4. Tearing down helper pod..."
 kubectl delete pod genesis-extractor -n "${NAMESPACE}" --wait=false
 
 # Helper arrays/definitions
-VAL_NAMES=("afrinic" "apnic" "arin" "ripencc" "lacnic" "rono" "rono-2")
-RPC_NAMES=("afrinic" "apnic" "arin" "ripencc" "lacnic" "rono")
+VAL_NAMES=("afrinic" "apnic" "rono" "rono-2")
+RPC_NAMES=("afrinic" "apnic" "rono")
 
 # Check we have the expected directories (fallback for different Besu versions)
 if [ -d "${TEMP_DIR}/validators/networkFiles/keys" ]; then
@@ -100,12 +100,12 @@ NON_VAL_KEYS=($(ls -d 0x* | sort))
 cd - >/dev/null
 
 echo "5. Verifying key counts..."
-if [ "${#VAL_KEYS[@]}" -ne 7 ]; then
-  echo "ERROR: Expected 7 validator keys, found ${#VAL_KEYS[@]}"
+if [ "${#VAL_KEYS[@]}" -ne 4 ]; then
+  echo "ERROR: Expected 4 validator keys, found ${#VAL_KEYS[@]}"
   exit 1
 fi
-if [ "${#NON_VAL_KEYS[@]}" -ne 8 ]; then
-  echo "ERROR: Expected 8 non-validator keys (2 bootnodes + 6 RPCs), found ${#NON_VAL_KEYS[@]}"
+if [ "${#NON_VAL_KEYS[@]}" -ne 5 ]; then
+  echo "ERROR: Expected 5 non-validator keys (2 bootnodes + 3 RPCs), found ${#NON_VAL_KEYS[@]}"
   exit 1
 fi
 

@@ -14,7 +14,10 @@ module.exports = {
   networks: {
     hardhat: {},
     localhost: {
-      url: "http://127.0.0.1:8545"
+      url: "http://127.0.0.1:8545",
+      accounts: ["0xae6ae8e5ccbfb04590405997ee2d52d2b330726137b875053c36d94e974d162f"],
+      gas: 15000000,
+      gasPrice: 0
     },
     besuPrivate: {
       url: "http://rpc-rono.besu-private.svc.cluster.local:8545",

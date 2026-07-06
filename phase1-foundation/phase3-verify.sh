@@ -48,7 +48,7 @@ fi
 # ─── Check 2: Validators Running ─────────────────────────────────────────
 echo ""
 echo "━━━ [2/10] Validators Status Check ━━━"
-VAL_ORGS=("afrinic" "apnic" "arin" "ripencc" "lacnic" "rono" "rono-2")
+VAL_ORGS=("afrinic" "apnic" "rono" "rono-2")
 VAL_FAIL=0
 for ORG in "${VAL_ORGS[@]}"; do
   V_READY=$(kubectl get statefulset "validator-${ORG}" -n "${NAMESPACE}" -o jsonpath='{.status.readyReplicas}' 2>/dev/null || echo "0")
@@ -63,7 +63,7 @@ done
 # ─── Check 3: RPC Nodes Running ──────────────────────────────────────────
 echo ""
 echo "━━━ [3/10] RPC Nodes Status Check ━━━"
-RPC_ORGS=("afrinic" "apnic" "arin" "ripencc" "lacnic" "rono")
+RPC_ORGS=("afrinic" "apnic" "rono")
 RPC_FAIL=0
 for ORG in "${RPC_ORGS[@]}"; do
   R_READY=$(kubectl get deployment "rpc-${ORG}" -n "${NAMESPACE}" -o jsonpath='{.status.readyReplicas}' 2>/dev/null || echo "0")

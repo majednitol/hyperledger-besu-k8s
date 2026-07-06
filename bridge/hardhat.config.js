@@ -1,5 +1,8 @@
 require("@nomicfoundation/hardhat-toolbox");
 
+// Deployer private key (matches pre-funded address 0xf17f52151EbEF6C7334FAD080c5704D77216b732)
+const DEPLOYER_KEY = "ae6ae8e5ccbfb04590405997ee2d52d2b330726137b875053c36d94e974d162f";
+
 /** @type import('hardhat/config').HardhatUserConfig */
 module.exports = {
   solidity: {
@@ -13,13 +16,17 @@ module.exports = {
   },
   networks: {
     hardhat: {},
-    localhost: {
-      url: "http://127.0.0.1:8545"
+    besuPrivate: {
+      url: "http://127.0.0.1:18545",
+      chainId: 78901,
+      gasPrice: 0,
+      accounts: [DEPLOYER_KEY]
     },
     besuPublic: {
-      url: "http://rpc-public.besu-public.svc.cluster.local:8545",
-      gas: 15000000,
-      gasPrice: 0 // QBFT handles gas but standard transaction validation may require gasPrice: 0 or low value
+      url: "http://127.0.0.1:28545",
+      chainId: 78902,
+      gasPrice: 0,
+      accounts: [DEPLOYER_KEY]
     }
   }
 };

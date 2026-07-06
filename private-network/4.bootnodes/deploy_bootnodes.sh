@@ -62,6 +62,7 @@ spec:
             - --p2p-port=${PRIVATE_P2P_PORT}
             - --rpc-http-enabled=false
             - --nat-method=NONE
+            - --min-gas-price=0
             - --metrics-enabled=true
             - --metrics-port=9545
             - --metrics-host=0.0.0.0
@@ -84,6 +85,9 @@ spec:
             - name: tls
               mountPath: /tls
               readOnly: true
+          env:
+            - name: BESU_OPTS
+              value: "-Xmx256m -Xms128m -XX:+UseG1GC -XX:MaxDirectMemorySize=256m"
           resources:
             requests:
               cpu: "${BOOTNODE_CPU_REQUEST}"
@@ -102,17 +106,21 @@ spec:
               containerPort: 9545
               protocol: TCP
           # Readiness/Liveness Probes on Metrics Port (HTTP RPC is disabled)
-          livenessProbe:
-            httpGet:
-              path: /liveness
+          startupProbe:
+            tcpSocket:
               port: 9545
-            initialDelaySeconds: 60
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            failureThreshold: 30
+          livenessProbe:
+            tcpSocket:
+              port: 9545
+            initialDelaySeconds: 15
             periodSeconds: 30
           readinessProbe:
-            httpGet:
-              path: /readiness
+            tcpSocket:
               port: 9545
-            initialDelaySeconds: 30
+            initialDelaySeconds: 15
             periodSeconds: 15
       volumes:
         - name: data

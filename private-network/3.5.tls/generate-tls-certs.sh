@@ -13,8 +13,8 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source "${SCRIPT_DIR}/../../config.env"
 
 NAMESPACE="${PRIVATE_NAMESPACE}"
-VAL_NAMES=("afrinic" "apnic" "arin" "ripencc" "lacnic" "rono" "rono-2")
-RPC_NAMES=("afrinic" "apnic" "arin" "ripencc" "lacnic" "rono")
+VAL_NAMES=("afrinic" "apnic" "rono" "rono-2")
+RPC_NAMES=("afrinic" "apnic" "rono")
 
 echo "1. Creating keystore password secret..."
 PASSWORD="besusharedkeystorepassword123"

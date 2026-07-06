@@ -1,0 +1,21 @@
+{
+  "config" : {
+    "chainId" : 78902,
+    "londonBlock" : 0,
+    "shanghaiTime" : 0,
+    "zeroBaseFee" : true,
+    "qbft" : {
+      "blockperiodseconds" : 5,
+      "epochlength" : 30000,
+      "requesttimeoutseconds" : 10,
+      "emptyblockperiodseconds" : 60
+    }
+  },
+  "nonce" : "0x0",
+  "timestamp" : "0x0",
+  "gasLimit" : "0x2FAF080",
+  "difficulty" : "0x1",
+  "coinbase" : "0x0000000000000000000000000000000000000000",
+  "alloc" : { },
+  "extraData" : "0xf88fa00000000000000000000000000000000000000000000000000000000000000000f86994fde38e2359c2bcb3827429cd9c8996e0d94832ac94d0dbc0fab8ef6d27f07e171e861fb8a12f83712494b34c4667d26e7bcea11253648f8f01f3305c6f2294c1a68a21b7834ee2d6a5a592cc175370a1cf5ecb94772551e0b2f59c7c99ebf4206f9c2d2b11413582c080c0"
+}

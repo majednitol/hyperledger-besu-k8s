@@ -36,6 +36,42 @@
       "artifacts": [
         "RegistryAnchor"
       ]
+    },
+    "/Users/majedurrahman/coding/hyperledger besu /besu-network/bridge/contracts/PrefixRegistry.sol": {
+      "lastModificationDate": 1783274459123,
+      "contentHash": "656a03befe18f2ceadacabe6118fbda9",
+      "sourceName": "contracts/PrefixRegistry.sol",
+      "solcConfig": {
+        "version": "0.8.20",
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 200
+          },
+          "evmVersion": "paris",
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [],
+      "versionPragmas": [
+        "^0.8.20"
+      ],
+      "artifacts": [
+        "PrefixRegistry"
+      ]
     }
   }
 }

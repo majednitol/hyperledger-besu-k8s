@@ -60,17 +60,11 @@ spec:
             - name: PUBLIC_RPC_URL
               value: "http://rpc-public.besu-public.svc.cluster.local:8545"
             - name: RPC_AFRINIC_URL
-              value: "http://rpc-rono.besu-private.svc.cluster.local:8545" # Shared private rpc nodes
+              value: "http://rpc-afrinic.besu-private.svc.cluster.local:8545"
             - name: RPC_APNIC_URL
-              value: "http://rpc-rono.besu-private.svc.cluster.local:8545"
-            - name: RPC_ARIN_URL
-              value: "http://rpc-rono.besu-private.svc.cluster.local:8545"
-            - name: RPC_RIPENCC_URL
-              value: "http://rpc-rono.besu-private.svc.cluster.local:8545"
-            - name: RPC_LACNIC_URL
-              value: "http://rpc-rono.besu-private.svc.cluster.local:8545"
+              value: "http://rpc-afrinic.besu-private.svc.cluster.local:8545"
             - name: RPC_RONO_URL
-              value: "http://rpc-rono.besu-private.svc.cluster.local:8545"
+              value: "http://rpc-afrinic.besu-private.svc.cluster.local:8545"
 ---
 apiVersion: v1
 kind: Service

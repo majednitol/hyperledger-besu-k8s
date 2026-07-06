@@ -49,12 +49,54 @@ spec:
             - --rpc-http-enabled=false
             - --nat-method=NONE
             - --discovery-enabled=true
+            - --min-gas-price=0
+            - --metrics-enabled=true
+            - --metrics-port=9545
+            - --metrics-host=0.0.0.0
           securityContext:
             allowPrivilegeEscalation: false
             capabilities:
               drop:
                 - ALL
             readOnlyRootFilesystem: false
+            seccompProfile:
+              type: RuntimeDefault
+          env:
+            - name: BESU_OPTS
+              value: "-Xmx256m -Xms128m -XX:+UseG1GC -XX:MaxDirectMemorySize=256m"
+          resources:
+            requests:
+              cpu: "${BOOTNODE_CPU_REQUEST}"
+              memory: "${BOOTNODE_MEM_REQUEST}"
+            limits:
+              cpu: "${BOOTNODE_CPU_LIMIT}"
+              memory: "${BOOTNODE_MEM_LIMIT}"
+          ports:
+            - name: p2p-tcp
+              containerPort: 30303
+              protocol: TCP
+            - name: p2p-udp
+              containerPort: 30303
+              protocol: UDP
+            - name: metrics
+              containerPort: 9545
+              protocol: TCP
+          startupProbe:
+            tcpSocket:
+              port: 9545
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            failureThreshold: 30
+          livenessProbe:
+            tcpSocket:
+              port: 9545
+            initialDelaySeconds: 15
+            periodSeconds: 30
+          readinessProbe:
+            tcpSocket:
+              port: 9545
+            initialDelaySeconds: 15
+            periodSeconds: 15
           volumeMounts:
             - name: data
               mountPath: /data
@@ -93,5 +135,9 @@ spec:
       port: 30303
       targetPort: 30303
       protocol: UDP
+    - name: metrics
+      port: 9545
+      targetPort: 9545
+      protocol: TCP
 EOF
 done

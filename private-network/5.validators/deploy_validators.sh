@@ -12,7 +12,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source "${SCRIPT_DIR}/../../config.env"
 
 NAMESPACE="${PRIVATE_NAMESPACE}"
-VAL_ORGS=("afrinic" "apnic" "arin" "ripencc" "lacnic" "rono" "rono-2")
+VAL_ORGS=("afrinic" "apnic" "rono" "rono-2")
 
 echo "Deploying ${#VAL_ORGS[@]} private validators..."
 
@@ -77,6 +77,7 @@ spec:
             - --p2p-port=${PRIVATE_P2P_PORT}
             - --rpc-http-enabled=false
             - --bootnodes=${BOOTNODE_ENODES}
+            - --min-gas-price=0
             - --metrics-enabled=true
             - --metrics-port=9545
             - --metrics-host=0.0.0.0
@@ -89,6 +90,9 @@ spec:
             readOnlyRootFilesystem: false
             seccompProfile:
               type: RuntimeDefault
+          env:
+            - name: BESU_OPTS
+              value: "-Xmx256m -Xms128m -XX:+UseG1GC -XX:MaxDirectMemorySize=256m"
           resources:
             requests:
               cpu: "${VALIDATOR_CPU_REQUEST}"
@@ -106,17 +110,21 @@ spec:
             - name: metrics
               containerPort: 9545
               protocol: TCP
-          livenessProbe:
-            httpGet:
-              path: /liveness
+          startupProbe:
+            tcpSocket:
               port: 9545
-            initialDelaySeconds: 60
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            failureThreshold: 30
+          livenessProbe:
+            tcpSocket:
+              port: 9545
+            initialDelaySeconds: 15
             periodSeconds: 30
           readinessProbe:
-            httpGet:
-              path: /readiness
+            tcpSocket:
               port: 9545
-            initialDelaySeconds: 30
+            initialDelaySeconds: 15
             periodSeconds: 15
           volumeMounts:
             - name: data

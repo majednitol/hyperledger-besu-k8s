@@ -15,9 +15,43 @@ spec:
       labels:
         app: blockscout
     spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 10001
+        runAsGroup: 10001
+        fsGroup: 10001
+        seccompProfile:
+          type: RuntimeDefault
+      initContainers:
+        - name: db-migrate
+          image: blockscout/blockscout:latest
+          command:
+            - /app/bin/blockscout
+          args:
+            - eval
+            - "Elixir.Explorer.ReleaseTasks.create_and_migrate"
+          env:
+            - name: DATABASE_URL
+              value: "postgresql://postgres:blockscout_db_secret_pass@blockscout-db:5432/blockscout?ssl=false"
+            - name: PGSSLMODE
+              value: "disable"
+            - name: DATABASE_SSL
+              value: "false"
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+            readOnlyRootFilesystem: false
+            seccompProfile:
+              type: RuntimeDefault
       containers:
         - name: blockscout
-          image: blockscout/blockscout:v6.2.0
+          image: blockscout/blockscout:latest
+          command:
+            - /app/bin/blockscout
+          args:
+            - start
           env:
             - name: PORT
               value: "4000"
@@ -26,11 +60,15 @@ spec:
             - name: ETHEREUM_JSONRPC_VARIANT
               value: "besu"
             - name: ETHEREUM_JSONRPC_HTTP_URL
-              value: "http://rpc-public.besu-public.svc.cluster.local:8545"
+              value: "http://public-rpc.besu-public.svc.cluster.local:8545"
             - name: ETHEREUM_JSONRPC_TRACE_URL
-              value: "http://rpc-public.besu-public.svc.cluster.local:8545"
+              value: "http://public-rpc.besu-public.svc.cluster.local:8545"
             - name: DATABASE_URL
-              value: "postgresql://postgres:blockscout_db_secret_pass@blockscout-db:5432/blockscout"
+              value: "postgresql://postgres:blockscout_db_secret_pass@blockscout-db:5432/blockscout?ssl=false"
+            - name: PGSSLMODE
+              value: "disable"
+            - name: DATABASE_SSL
+              value: "false"
             - name: REDIS_URL
               value: "redis://blockscout-redis:6379/0"
             - name: SECRET_KEY_BASE
@@ -47,6 +85,14 @@ spec:
             limits:
               cpu: "1.5"
               memory: "2Gi"
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+            readOnlyRootFilesystem: false
+            seccompProfile:
+              type: RuntimeDefault
 ---
 apiVersion: v1
 kind: Service

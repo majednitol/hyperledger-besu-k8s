@@ -21,9 +21,6 @@ const PORT = process.env.PORT || 3000;
 const PRIVATE_RPC_URLS = {
   afrinic: process.env.RPC_AFRINIC_URL || "http://127.0.0.1:8545",
   apnic: process.env.RPC_APNIC_URL || "http://127.0.0.1:8545",
-  arin: process.env.RPC_ARIN_URL || "http://127.0.0.1:8545",
-  ripencc: process.env.RPC_RIPENCC_URL || "http://127.0.0.1:8545",
-  lacnic: process.env.RPC_LACNIC_URL || "http://127.0.0.1:8545",
   rono: process.env.RPC_RONO_URL || "http://127.0.0.1:8545"
 };
 
@@ -36,9 +33,6 @@ const JWT_SECRET = process.env.JWT_SECRET || "dev-rir-secret-key-123456789";
 const RIR_PRIVATE_KEYS = {
   afrinic: process.env.AFRINIC_KEY || "0xae6ae8e5ccbfb04590405997ee2d52d2b330726137b875053c36d94e974d162f",
   apnic: process.env.APNIC_KEY || "0xae6ae8e5ccbfb04590405997ee2d52d2b330726137b875053c36d94e974d162f",
-  arin: process.env.ARIN_KEY || "0xae6ae8e5ccbfb04590405997ee2d52d2b330726137b875053c36d94e974d162f",
-  ripencc: process.env.RIPENCC_KEY || "0xae6ae8e5ccbfb04590405997ee2d52d2b330726137b875053c36d94e974d162f",
-  lacnic: process.env.LACNIC_KEY || "0xae6ae8e5ccbfb04590405997ee2d52d2b330726137b875053c36d94e974d162f",
   rono: process.env.RONO_KEY || "0xae6ae8e5ccbfb04590405997ee2d52d2b330726137b875053c36d94e974d162f"
 };
 

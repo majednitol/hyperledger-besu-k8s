@@ -12,7 +12,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source "${SCRIPT_DIR}/../../config.env"
 
 NAMESPACE="${PRIVATE_NAMESPACE}"
-RPC_ORGS=("afrinic" "apnic" "arin" "ripencc" "lacnic" "rono")
+RPC_ORGS=("afrinic" "apnic" "rono")
 
 echo "Deploying ${#RPC_ORGS[@]} private RPC nodes..."
 
@@ -78,6 +78,7 @@ spec:
             - --rpc-http-host=0.0.0.0
             - --rpc-http-port=8545
             - --rpc-http-api=ETH,NET,QBFT,WEB3
+            - --min-gas-price=0
             - --rpc-http-cors-origins=*
             - --host-allowlist=*
             - --bootnodes=${BOOTNODE_ENODES}
@@ -93,6 +94,9 @@ spec:
             readOnlyRootFilesystem: false
             seccompProfile:
               type: RuntimeDefault
+          env:
+            - name: BESU_OPTS
+              value: "-Xmx256m -Xms128m -XX:+UseG1GC -XX:MaxDirectMemorySize=256m"
           resources:
             requests:
               cpu: "${RPC_CPU_REQUEST}"
@@ -113,17 +117,24 @@ spec:
             - name: metrics
               containerPort: 9545
               protocol: TCP
+          startupProbe:
+            httpGet:
+              path: /liveness
+              port: 8545
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            failureThreshold: 30
           livenessProbe:
             httpGet:
               path: /liveness
-              port: 9545
-            initialDelaySeconds: 60
+              port: 8545
+            initialDelaySeconds: 15
             periodSeconds: 30
           readinessProbe:
             httpGet:
               path: /readiness
-              port: 9545
-            initialDelaySeconds: 30
+              port: 8545
+            initialDelaySeconds: 15
             periodSeconds: 15
           volumeMounts:
             - name: data

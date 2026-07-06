@@ -12,6 +12,18 @@ source "${SCRIPT_DIR}/../../config.env"
 
 NAMESPACE="${PUBLIC_NAMESPACE}"
 
+# Resolve public bootnode enode URLs using ClusterIP addresses (Besu requires IP, not DNS)
+BOOTNODE_ENODES=""
+for bi in $(seq 1 "${PUBLIC_BOOTNODE_COUNT:-2}"); do
+  BN_IP=$(kubectl get svc "public-bootnode-${bi}" -n "${NAMESPACE}" -o jsonpath='{.spec.clusterIP}')
+  BN_PUBKEY=$(kubectl get secret "public-bootnode-${bi}-key" -n "${NAMESPACE}" -o jsonpath='{.data.key\.pub}' | base64 -d | sed 's/^0x//')
+  if [ -n "${BOOTNODE_ENODES}" ]; then
+    BOOTNODE_ENODES="${BOOTNODE_ENODES},"
+  fi
+  BOOTNODE_ENODES="${BOOTNODE_ENODES}enode://${BN_PUBKEY}@${BN_IP}:30303"
+done
+echo "  Resolved bootnode enodes: ${BOOTNODE_ENODES}"
+
 for i in $(seq 1 "${PUBLIC_VALIDATOR_COUNT}"); do
   NAME="public-validator-${i}"
   echo "Deploying ServiceAccount and StatefulSet for ${NAME} in ${NAMESPACE}..."
@@ -64,8 +76,9 @@ spec:
             - --genesis-file=/config/genesis.json
             - --node-private-key-file=/keys/key
             - --p2p-port=${PUBLIC_P2P_PORT}
-            - --static-nodes-file=/config/static-nodes.json
+            - --bootnodes=${BOOTNODE_ENODES}
             - --rpc-http-enabled=false
+            - --min-gas-price=0
             - --metrics-enabled=true
             - --metrics-port=9545
             - --metrics-host=0.0.0.0
@@ -76,6 +89,11 @@ spec:
               drop:
                 - ALL
             readOnlyRootFilesystem: false
+            seccompProfile:
+              type: RuntimeDefault
+          env:
+            - name: BESU_OPTS
+              value: "-Xmx256m -Xms128m -XX:+UseG1GC -XX:MaxDirectMemorySize=256m"
           resources:
             requests:
               cpu: "${VALIDATOR_CPU_REQUEST}"
@@ -83,18 +101,32 @@ spec:
             limits:
               cpu: "${VALIDATOR_CPU_LIMIT}"
               memory: "${VALIDATOR_MEM_LIMIT}"
+          ports:
+            - name: p2p-tcp
+              containerPort: 30303
+              protocol: TCP
+            - name: p2p-udp
+              containerPort: 30303
+              protocol: UDP
+            - name: metrics
+              containerPort: 9545
+              protocol: TCP
           # Run health checks on metrics port 9545 (HTTP RPC is disabled)
-          livenessProbe:
-            httpGet:
-              path: /liveness
+          startupProbe:
+            tcpSocket:
               port: 9545
-            initialDelaySeconds: 60
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            failureThreshold: 30
+          livenessProbe:
+            tcpSocket:
+              port: 9545
+            initialDelaySeconds: 15
             periodSeconds: 30
           readinessProbe:
-            httpGet:
-              path: /readiness
+            tcpSocket:
               port: 9545
-            initialDelaySeconds: 30
+            initialDelaySeconds: 15
             periodSeconds: 15
           volumeMounts:
             - name: data

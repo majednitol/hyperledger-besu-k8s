@@ -4,6 +4,7 @@
       "chainId": 78902,
       "londonBlock": 0,
       "shanghaiTime": 0,
+      "zeroBaseFee": true,
       "qbft": {
         "blockperiodseconds": 5,
         "epochlength": 30000,
